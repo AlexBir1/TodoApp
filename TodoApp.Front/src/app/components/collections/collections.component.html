@@ -1,0 +1,33 @@
+
+<div class="card mb-2" style="cursor: pointer;">
+    <div class="card-body">
+        <h5>All</h5>
+    </div>
+  </div>
+  <div class="card mb-2" style="cursor: pointer;">
+    <div class="card-body">
+        <h5>Unsorted</h5>
+    </div>
+  </div>
+  <div class="card mb-2" *ngIf="!isCreationMode" style="cursor: pointer;" (click)="changeIsCreationMode()">
+    <div class="card-body">
+        <i class="bi bi-plus-lg"></i> Create new category
+    </div>
+  </div>
+  <div class="card mb-2" *ngIf="isCreationMode">
+    <div class="card-body">
+        <div class="row justify-content-between">
+            <div class="col-lg-6 mb-3">
+              <h5>New category</h5>
+            </div>
+            <div class="col-lg-6 text-end">
+                <button type="button" class="btn btn-danger px-4"><i class="bi bi-x-lg" (click)="changeIsCreationMode()"></i></button>
+            </div>
+          </div>
+          <div class="input-group">
+            <span class="input-group-text">Title</span>
+            <input class="form-control">
+            <button class="btn btn-success px-4"><i class="bi bi-plus-square"></i></button>
+          </div>
+    </div>
+  </div>
