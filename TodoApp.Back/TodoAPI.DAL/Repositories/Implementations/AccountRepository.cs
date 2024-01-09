@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Query.SqlExpressions;
 using System.Linq.Expressions;
+using TodoAPI.DAL.DBContext;
 using TodoAPI.DAL.Entities;
 using TodoAPI.DAL.Repositories.Interfaces;
 
@@ -31,7 +33,7 @@ namespace TodoAPI.DAL.Repositories.Implementations
             if (await _userManager.Users.SingleOrDefaultAsync(x=>x.PhoneNumber == entity.PhoneNumber) != null)
                 throw new Exception("Account with this phone number exists.");
 
-            var result = await _userManager.CreateAsync(entity);
+            await _userManager.CreateAsync(entity);
 
             return await _userManager.FindByNameAsync(entity.UserName);
         }
@@ -50,12 +52,12 @@ namespace TodoAPI.DAL.Repositories.Implementations
 
         public async Task<IEnumerable<Account>> GetAllAsync()
         {
-            throw new NotImplementedException();
+            return await _userManager.Users.ToListAsync();
         }
 
         public async Task<IEnumerable<Account>> GetAllAsync(Expression<Func<Account, bool>> expression)
         {
-            throw new NotImplementedException();
+            return await _userManager.Users.Where(expression).ToListAsync();
         }
 
         public async Task<Account> GetByIdAsync(string id)
@@ -68,9 +70,10 @@ namespace TodoAPI.DAL.Repositories.Implementations
             return account;
         }
 
-        public bool SetPassword(Account account, string password)
+        public async Task<bool> SetPassword(Account account, string password)
         {
-            return _userManager.AddPasswordAsync(account, password).GetAwaiter().GetResult().Succeeded;
+            var result = await _userManager.AddPasswordAsync(account, password);
+            return result.Succeeded;
         }
 
         public async Task<Account> UpdateAsync(string id, Account entity)

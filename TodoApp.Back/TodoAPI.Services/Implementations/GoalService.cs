@@ -25,11 +25,11 @@ namespace TodoAPI.Services.Implementations
             _mapper = mapper;
         }
 
-        public async Task<Goal> AddToCategory(string goalId, string categoryId)
+        public async Task<CategoryGoal> AddToCategory(string goalId, string categoryId)
         {
             await _dbRepo.GoalRepo.AddToCategory(goalId, categoryId);
             await _dbRepo.CommitAsync();
-            return await _dbRepo.GoalRepo.GetByIdAsync(goalId);
+            return new CategoryGoal { GoalId = Guid.Parse(goalId), CategoryId = Guid.Parse(categoryId) };
         }
 
         public async Task<IAPIResponse<Goal>> CreateAsync(GoalModel model)
@@ -59,18 +59,18 @@ namespace TodoAPI.Services.Implementations
             return new APIResponse<Goal>(true, await _dbRepo.GoalRepo.GetByIdAsync(id));
         }
 
-        public async Task<Goal> RemoveFromCategory(string goalId, string categoryId)
+        public async Task<CategoryGoal> RemoveFromCategory(string goalId, string categoryId)
         {
             _dbRepo.GoalRepo.RemoveFromCategory(goalId, categoryId);
             await _dbRepo.CommitAsync();
-            return await _dbRepo.GoalRepo.GetByIdAsync(goalId);
+            return new CategoryGoal { GoalId = Guid.Parse(goalId), CategoryId = Guid.Parse(categoryId) };
         }
 
         public async Task<IAPIResponse<Goal>> UpdateAsync(string id, GoalModel model)
         {
             var result = await _dbRepo.GoalRepo.UpdateAsync(id, _mapper.Map<Goal>(model));
             await _dbRepo.CommitAsync();
-            return new APIResponse<Goal>(true, result);
+            return new APIResponse<Goal>(true, await _dbRepo.GoalRepo.GetByIdAsync(id));
         }
     }
 }

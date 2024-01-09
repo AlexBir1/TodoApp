@@ -10,6 +10,6 @@ namespace TodoAPI.DAL.Repositories.Interfaces
     public interface IAccountRepository : IRepository<Account>
     {
         Task<bool> CheckPasswordAsync(Account account, string password);
-        bool SetPassword(Account account, string password);
+        Task<bool> SetPassword(Account account, string password);
     }
 }

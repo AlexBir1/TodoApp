@@ -2,19 +2,90 @@
     <div class="card-header">
         <div class="row justify-content-between">
             <div class="col-lg-6">
-              <h5>My note</h5>
+              <h5>My goal</h5>
             </div>
             <div class="col-lg-6 text-end">
-                <button class="btn btn-danger px-4"><i class="bi bi-trash3"></i></button>
+                <button type="button" class="btn btn-primary px-4" (click)="closeDetails()"><i class="bi bi-arrow-return-left"></i></button>
             </div>
           </div>
     </div>
-    <div class="card-body">
-        <ul class="list-group">
-            <li class="list-group-item"></li>
-            <li class="list-group-item"></li>
-            <li class="list-group-item"></li>
-            <li class="list-group-item"></li>
+    <form class="card-body" [formGroup]="goalForm">
+        <ul class="list-group mb-2">
+            <li class="list-group-item d-flex align-items-center">
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="flexSwitchCheckChecked" [checked]="goal?.isCompleted">
+                </div>
+              <input class="form-control" formControlName="title">
+            </li>
+            <li class="list-group-item">
+                <textarea class="form-control" formControlName="description"></textarea>
+            </li>
+            <li class="list-group-item">
+                <input class="form-control" type="datetime-local" formControlName="startDate">
+            </li>
+            <li class="list-group-item d-flex p-2 flex-wrap">
+                <div class="card mb-2" (click)="changeIsAddingCategoryMode()" *ngIf="!isAddingCategoryMode">
+                    <div class="card-body">
+                        <i class="bi bi-bookmark-plus"></i> Add to category
+                    </div>
+                  </div>
+                  <div class="card mb-2" *ngIf="isAddingCategoryMode">
+                    <div class="card-body">
+                        <div class="d-flex flex-wrap justify-content-between">
+                            <label>Add to category</label>
+                            <button type="button" class="btn btn-danger px-4"><i class="bi bi-x-lg" (click)="changeIsAddingCategoryMode()"></i></button>
+                        </div>
+                        <hr>
+                        <div class="overflow-y-scroll px-2" style="max-height:15vh">
+                            <div class="btn-group m-1" *ngFor="let category of categories">
+                                <button type="button" class="btn btn-outline-primary btn-sm p-2" (click)="selectCategoryToAdd(category)">
+                                    <span class="px-2" style="border-radius: 20px; border: 1px solid black;" [style.background-color]="category.colorHex"></span>
+                                    {{category.colorTitle}}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                  </div>
+                  <div *ngIf="!isAddingCategoryMode">
+                    <div class="btn-group m-1" *ngFor="let category of goal!.goalCategories"> 
+                        <button type="button" class="btn btn-outline-primary btn-sm p-2">
+                            <span class="px-3 py-1" style="border-radius: 9px; border: 1px solid black; margin-right: 5px;" [style.background-color]="category.category.colorHex"></span>
+                            {{category.category.colorTitle}}
+                        </button>
+                        <button type="button" class="btn btn-outline-danger btn-sm" (click)="selectCategoryToRemove(category)"><i class="bi bi-trash3"></i></button>
+                    </div>
+                </div>
+            </li>
+            <li class="list-group-item">
+                <input class="form-control mb-2" type="file">
+                <div class="card mb-2">
+                    <div class="card-body">
+                        <div class="row justify-content-between">
+                            <div class="col-lg-8 d-flex align-items-center">
+                              <label>Coming soon</label>
+                            </div>
+                            <div class="col-lg-4 text-end">
+                                <div class="btn-group">
+                                    <button class="btn btn-danger px-2"><i class="bi bi-trash3"></i></button>
+                                    <button class="btn btn-success px-3"><i class="bi bi-download"></i></button>
+                                </div>
+                            </div>
+                          </div>
+                    </div>
+                </div>
+            </li>
+            <li class="list-group-item d-flex align-items-center">
+                <label>Created at: {{goal?.creationDate | date: 'dd.MM.yyyy - hh:mm'}}</label>
+            </li>
+            <li class="list-group-item d-flex align-items-center">
+                <label>Updated at: {{goal?.updateDate | date: 'dd.MM.yyyy - hh:mm'}}</label>
+            </li>
         </ul>
-    </div>
+        <div class="text-center">
+            <div class="btn-group">
+                <button type="button" class="btn btn-warning px-4" (click)="updateGoal()"><i class="bi bi-pencil-square"></i></button>
+                <button type="button" class="btn btn-danger px-4" (click)="deleteGoal(goal!.id)"><i class="bi bi-trash3"></i></button>
+            </div>
+        </div>
+    </form>
 </div>

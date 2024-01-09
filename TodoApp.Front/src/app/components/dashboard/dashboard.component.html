@@ -1,0 +1,50 @@
+<div class="container-fluid" style="background-color: rgba(107, 103, 103, 0.295);">
+    <app-navbar-top 
+      (logOutEvent)="logOut()" 
+      (changeIsNavbarShowingEvent)="changeIsNavbarShowing()"
+      (searchGoalsEvent)="onSearchGoalsByQuery($event)"
+    ></app-navbar-top>
+  </div>
+  <div class="container-fluid">
+    <div class="container-fluid">
+      <div class="row justify-content-center">
+          <div class="col-lg-3 mt-2" *ngIf="isNavbarShowing">
+            <app-categories [categories]="categories"></app-categories>
+            <app-collections 
+              [collections]="collections" 
+              (selectedCollectionEvent)="getAllGoalsInCollection($event)" 
+              (deletedCollectionEvent)="setDefaultCollectionAfterDelete($event)">
+            </app-collections>
+          </div>
+          <div class="mt-2" 
+          [class.col-lg-12]="!isNavbarShowing && !selectedGoal" 
+          [class.col-lg-6]="isNavbarShowing && selectedGoal != null" 
+          [class.col-lg-9]="(isNavbarShowing && !selectedGoal) || (!isNavbarShowing && selectedGoal)">
+            <app-goals 
+              [goals]="goals" 
+              [collection]="selectedCollection" 
+              [collections]="collections"
+              [categories]="categories" 
+              (selectedGoalEvent)="setSelectedGoal($event)" 
+              (deletedGoalEvent)="removeSelectedGoal()"
+              (updatedGoalEvent)="onUpdatedGoal($event)"
+              (changedSelectedCategoryEvent)="onChangedSelectedCategory($event)"
+              >
+            </app-goals>
+          </div>
+          <div class="col-lg-3 mt-2">
+            <app-goal-details 
+              *ngIf="selectedGoal" 
+              [goal]="selectedGoal" 
+              [categories]="categories"
+              (closedGoalDetailsEvent)="removeSelectedGoal()" 
+              (deletedGoalEvent)="removeSelectedGoal()"
+              (addedToCategoryEvent)="onGoalAddedToCategory($event)"
+              (removedFromCategoryEvent)="onGoalRemovedFromCategory($event)"
+              (updatedGoalEvent)="onUpdatedGoal($event)"
+              >
+            </app-goal-details>
+          </div>
+      </div>
+    </div>
+  </div>

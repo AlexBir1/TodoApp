@@ -27,5 +27,7 @@ export class CategoryService implements ICategoryService{
     getAll(): Observable<APIResponse<CategoryModel[]>> {
         return this.httpClient.get<APIResponse<CategoryModel[]>>(this.apiControllerUrl);
     }
-
+    getAllFiltered(accountId: string): Observable<APIResponse<CategoryModel[]>> {
+        return this.httpClient.get<APIResponse<CategoryModel[]>>(this.apiControllerUrl, {params:{accountId: accountId}})
+    }
 }

@@ -13,8 +13,7 @@ namespace TodoAPI.Mappers
                 .ForMember(x => x.Title, x => x.MapFrom(c => c.Title))
                 .ForMember(x => x.CollectionId, x => x.MapFrom(c => c.CollectionId))
                 .ForMember(x => x.StartDate, x => x.MapFrom(c => c.StartDate))
-                .ForMember(x => x.CreationDate, x => x.MapFrom(c => c.CreationDate))
-                .ForMember(x => x.UpdateDate, x => x.MapFrom(c => c.UpdateDate));
+                .ForMember(x => x.IsCompleted, x => x.MapFrom(c => c.IsCompleted));
 
             CreateMap<CollectionModel, Collection>()
                 .ForMember(x => x.Title, x => x.MapFrom(c => c.Title))

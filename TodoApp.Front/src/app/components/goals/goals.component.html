@@ -1,33 +1,80 @@
-<h4>Collection</h4>
+<div class="row justify-content-between align-items-center">
+    <div class="col-lg-6 d-flex align-items-center">
+        <h4>{{collection.title}}</h4>
+    </div>
+    <div class="col-lg-6 text-end">
+      <div class="input-group">
+        <span class="input-group-text">Category</span>
+        <select class="form-select" [(ngModel)]="selectedCategoryId" (change)="onSelectedCategoryChange()">
+          <option value="">-----</option>
+          <option *ngFor="let category of categories" [value]="category.id"><p [ngStyle]="{'color': category.colorHex}">{{category.colorTitle}}</p></option>
+        </select>
+      </div>
+    </div>
+</div>
 <hr>
-  <div class="card mb-2" style="width:100%; background-color: rgba(197, 197, 197, 0.2);">
+<div class="card mb-2" *ngIf="!isCreationMode" style="cursor: pointer;" (click)="changeIsCreationMode()">
     <div class="card-body">
-        <div class="row justify-content-between">
-            <div class="col-lg-6 d-flex align-items-center">
-                <div class="form-check form-switch">
-                    <input class="form-check-input" type="checkbox" id="flexSwitchCheckChecked" checked="">
-                  </div>
-              <h5>My note</h5>
-            </div>
-            <div class="col-lg-6 text-end">
-                <button class="btn btn-danger px-4"><i class="bi bi-trash3"></i></button>
-            </div>
-          </div>
+        <i class="bi bi-plus-lg"></i> Create new goal
     </div>
   </div>
-  <div class="card mb-2" style="width:100%; background-color: rgba(197, 197, 197, 0.2);">
-    <div class="card-body">
+  <div class="card mb-2" *ngIf="isCreationMode" style="cursor: pointer;">
+    <form class="card-body" [formGroup]="goalForm" (submit)="createGoal()">
         <div class="row justify-content-between">
-            <div class="col-lg-6 d-flex align-items-center">
-                <div class="form-check form-switch">
-                    <input class="form-check-input" type="checkbox" id="flexSwitchCheckChecked" checked="">
-                  </div>
-              <h5>My note</h5>
+            <div class="col-lg-6 mb-3">
+              <h5>New goal</h5>
             </div>
             <div class="col-lg-6 text-end">
-                <button class="btn btn-danger px-4"><i class="bi bi-trash3"></i></button>
+                <button class="btn btn-success px-4" *ngIf="goalForm.valid"><i class="bi bi-plus-lg"></i></button>
+                <button type="button" class="btn btn-danger px-4" (click)="changeIsCreationMode()"><i class="bi bi-x-lg"></i></button>
             </div>
           </div>
-    </div>
+          <div class="input-group mb-2">
+            <span class="input-group-text">Title</span>
+            <input class="form-control" formControlName="title">
+          </div>
+          <span *ngIf="goalForm.controls['title'].dirty && goalForm.hasError('required','title')" class="text-danger bold mb-4">Field is required</span>
+          <div class="input-group mb-2">
+            <span class="input-group-text">Description</span>
+            <textarea class="form-control" formControlName="description"></textarea>
+          </div>
+          <span *ngIf="goalForm.controls['description'].dirty && goalForm.hasError('required','description')" class="text-danger bold mb-4">Field is required</span>
+          <div class="input-group mb-2">
+            <span class="input-group-text">Start date</span>
+            <input class="form-control" type="datetime-local" formControlName="startDate">
+          </div>
+          <span *ngIf="goalForm.controls['startDate'].dirty && goalForm.hasError('required','startDate')" class="text-danger bold mb-4">Field is required</span>
+          <div class="input-group mb-2">
+            <span class="input-group-text">Collection</span>
+            <select class="form-select" formControlName="collectionId">
+                <option *ngFor="let c of collections" [value]="c.id">{{c.title}}</option>
+            </select>
+          </div>
+    </form>
+  </div>
+  <div class="overflow-y-scroll px-2" style="max-height:60vh" *ngIf="!isCreationMode">
+    <div class="card mb-2" *ngFor="let goal of goals" (click)="selectGoal(goal)">
+        <div class="card-body">
+            <div class="row justify-content-between">
+                <div class="col-lg-6 d-flex align-items-center">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" [checked]="goal.isCompleted" (click)="onChangeGoalCompletion(goal, $event, $event)">
+                      </div>
+                  <h5>{{goal.title}}</h5>
+                </div>
+                <div class="col-lg-6 text-end">
+                    <button class="btn btn-danger px-4" (click)="deleteGoal(goal.id, $event)"><i class="bi bi-trash3"></i></button>
+                </div>
+              </div>
+          </div>
+          <div class="card-body" *ngIf="goal.goalCategories">
+            <div class="d flex flex-wrap">
+              <button type="button" class="btn btn-outline-primary btn-sm p-2" *ngFor="let c of goal.goalCategories">
+                <span class="px-3 py-1" style="border-radius: 9px; border: 1px solid black; margin-right: 5px;" [style.background-color]="c.category.colorHex"></span>
+                {{c.category.colorTitle}}
+              </button>
+            </div>
+          </div>
+      </div>
   </div>
   

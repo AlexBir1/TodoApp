@@ -8,7 +8,7 @@ import { IAttachmentService } from "../interfaces/attachment.service";
 
 @Injectable()
 export class AttachmentService implements IAttachmentService{
-    private apiControllerUrl: string = environment.apiHttpsUrl + 'Categories/'; 
+    private apiControllerUrl: string = environment.apiHttpsUrl + 'Attachments/'; 
 
     constructor(private httpClient: HttpClient){}
     

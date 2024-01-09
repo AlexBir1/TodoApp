@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using TodoAPI.APIResponse.Interfaces;
 using TodoAPI.DAL.Entities;
 using TodoAPI.Filters;
+using TodoAPI.Services.Interfaces;
 using TodoAPI.Services.UOW;
 using TodoAPI.Shared.Models;
 
@@ -14,18 +15,18 @@ namespace TodoAPI.Controllers
     [Authorize]
     public class GoalsController : ControllerBase
     {
-        private readonly ServiceRepository _serviceRepo;
+        private readonly IServiceRepository _serviceRepo;
 
-        public GoalsController(ServiceRepository serviceRepo)
+        public GoalsController(IServiceRepository serviceRepo)
         {
             _serviceRepo = serviceRepo;
         }
 
-        [HttpPatch("{id}/AddToCategory")]
-        public async Task<ActionResult<IAPIResponse<Goal>>> AddToCategory(string id, [FromQuery] string categoryId) => Ok(await _serviceRepo.GoalService.AddToCategory(id, categoryId));
+        [HttpPatch("{id}/AddToCategory/{selectedCategoryId}")]
+        public async Task<ActionResult<IAPIResponse<CategoryGoal>>> AddToCategory(string id, string selectedCategoryId) => Ok(await _serviceRepo.GoalService.AddToCategory(id, selectedCategoryId));
 
-        [HttpPatch("{id}/RemoveFromCategory")]
-        public async Task<ActionResult<IAPIResponse<Goal>>> RemoveFromCategory(string id, [FromQuery] string categoryId) => Ok(await _serviceRepo.GoalService.RemoveFromCategory(id, categoryId));
+        [HttpPatch("{id}/RemoveFromCategory/{selectedCategoryId}")]
+        public async Task<ActionResult<IAPIResponse<CategoryGoal>>> RemoveFromCategory(string id, string selectedCategoryId) => Ok(await _serviceRepo.GoalService.RemoveFromCategory(id, selectedCategoryId));
 
         [ValidationFilter]
         [HttpPost]

@@ -6,5 +6,4 @@ export interface GoalCategory{
     categoryId: string;
 
     category: CategoryModel;
-    goal: GoalModel;
 } 

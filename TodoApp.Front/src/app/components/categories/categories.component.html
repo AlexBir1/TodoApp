@@ -1,0 +1,44 @@
+
+  <ul class="list-group mb-2">
+    <li class="list-group-item">
+        <h5>Categories</h5>
+<hr>
+<div class="card mb-2" style="cursor: pointer;" *ngIf="!isCreationMode">
+    <div class="card-body d-flex p-2 flex-wrap">
+        <div class="overflow-y-scroll px-2" style="max-height:15vh">
+        <div class="btn-group m-1" *ngFor="let category of categories">
+            <button type="button" class="btn btn-outline-primary btn-sm p-2">
+                <span class="px-2" style="border-radius: 20px; border: 1px solid black;" [style.background-color]="category.colorHex"></span>
+                {{category.colorTitle}}
+            </button>
+            <button type="button" class="btn btn-outline-danger btn-sm" (click)="deleteCategory(category.id)"><i class="bi bi-trash3"></i></button>
+        </div>
+    </div>
+    </div>
+  </div>
+  <div class="card mb-2" *ngIf="!isCreationMode" style="cursor: pointer;" (click)="changeIsCreationMode()">
+    <div class="card-body">
+        <i class="bi bi-plus-lg"></i> Create new category
+    </div>
+  </div>
+  <div class="card mb-2" *ngIf="isCreationMode">
+    <div class="card-body">
+        <div class="row justify-content-between">
+            <div class="col-lg-6 mb-3">
+              <h5>New category</h5>
+            </div>
+            <div class="col-lg-6 text-end">
+                <button type="button" class="btn btn-danger px-4"><i class="bi bi-x-lg" (click)="changeIsCreationMode()"></i></button>
+            </div>
+          </div>
+          <hr>
+          <form class="input-group" [formGroup]="categoryForm" (submit)="createCategory()">
+            <span class="input-group-text">Title</span>
+            <input class="form-control" type="text" formControlName="colorTitle">
+            <input class="form-control-color" type="color" formControlName="colorHex">
+            <button class="btn btn-success px-4"><i class="bi bi-plus-square"></i></button>
+          </form>
+    </div>
+  </div>
+</li>
+</ul>

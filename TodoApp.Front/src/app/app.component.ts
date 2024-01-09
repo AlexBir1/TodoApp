@@ -1,60 +1,37 @@
-import { Component, OnInit } from '@angular/core';
+import { HTTP_INTERCEPTORS } from '@angular/common/http';
+import { Component, EventEmitter, OnInit, Output } from '@angular/core';
+import { Router } from '@angular/router';
+import { AuthInterceptor } from './interceptors/auth.interceptor';
 import { AccountService } from './services/implementations/account.service';
 import { AttachmentService } from './services/implementations/attachment.service';
+import { AuthorizedAccountService } from './services/implementations/authorized-account.service';
 import { CategoryService } from './services/implementations/category.service';
 import { CollectionService } from './services/implementations/collection.service';
 import { GoalService } from './services/implementations/goal.service';
 import { LocalStorageService } from './services/local-storage.service';
 import { AuthorizationModel } from './shared/models/authorization.model';
+import { CollectionModel } from './shared/models/collection.model';
+import { GoalModel } from './shared/models/goal.model';
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css'],
-  providers: [AccountService, AttachmentService, CategoryService, CollectionService, GoalService]
+  providers: []
 })
 export class AppComponent implements OnInit{
-  title = 'TodoApp';
-  isNavabarShowing: boolean = false;
-
-  constructor(private localStorage: LocalStorageService<AuthorizationModel>, private accountService: AccountService){}
+  constructor(private localStorageService: LocalStorageService, private authAccountService: AuthorizedAccountService, private router: Router){}
   ngOnInit(): void {
-    throw new Error('Method not implemented.');
-  }
-
-  refreshAuthToken(){
-    var account = this.localStorage.getAccountFromStorage();
+    let account = this.localStorageService.getAccountFromStorage();
     if(account){
-      if(account.keepAuthorized){
-        if(!this.validateToken(account)){
-            this.accountService.refreshAuthToken(account).subscribe({
-                next: (r) => {
-                    if(r.isSuccess){
-                        this.localStorage.addAccountToStorage(r.data);
-                    }
-                },
-                error: (e) =>{
-                }
-            });
-        }
-      }
-      else{
-          if(!this.validateToken(account)){
-              this.localStorage.removeAccountFromStorage();
-          }
-      }
+      this.authAccountService.addAccount(account);
+      this.router.navigateByUrl('/Dashboard');
+    }
+    else{
+      this.authAccountService.removeAccount();
+      this.router.navigateByUrl('/Auth');
     }
   }
+  title = 'TodoApp';
 
-  validateToken(model: AuthorizationModel): boolean{
-    var date = Date.now();
-    var expirationDate = new Date(model.tokenExpirationDate).getTime();
-    if(date > expirationDate) 
-        return false;
-    return true
-  }
-
-  changeIsNavabarShowing(){
-    this.isNavabarShowing = !this.isNavabarShowing;
-  }
 }

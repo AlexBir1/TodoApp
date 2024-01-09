@@ -5,19 +5,20 @@ import { IGoalService } from "../interfaces/goal.service";
 import { HttpClient } from "@angular/common/http";
 import { environment } from "src/environments/environment.dev";
 import { Injectable } from "@angular/core";
+import { GoalCategory } from "src/app/shared/models/goal-category.model";
 
 @Injectable()
 export class GoalService implements IGoalService{
-    private apiControllerUrl: string = environment.apiHttpsUrl + 'Categories/'; 
+    private apiControllerUrl: string = environment.apiHttpsUrl + 'Goals/'; 
 
     constructor(private httpClient: HttpClient){}
-    addToCategory(goalId: string, categoryId: string): Observable<APIResponse<GoalModel>> {
-        return this.httpClient.patch<APIResponse<GoalModel>>(this.apiControllerUrl + goalId + '/AddToCategory', { params: {categoryId: categoryId}})
+    addToCategory(goalId: string, categoryId: string): Observable<APIResponse<GoalCategory>> {
+        return this.httpClient.patch<APIResponse<GoalCategory>>(this.apiControllerUrl + goalId + '/AddToCategory/' + categoryId,{})
     }
-    removeFromCategory(goalId: string, categoryId: string): Observable<APIResponse<GoalModel>> {
-        return this.httpClient.patch<APIResponse<GoalModel>>(this.apiControllerUrl + goalId + '/RemoveFromCategory', { params: {categoryId: categoryId}})
+    removeFromCategory(goalId: string, categoryId: string): Observable<APIResponse<GoalCategory>> {
+        return this.httpClient.patch<APIResponse<GoalCategory>>(this.apiControllerUrl + goalId + '/RemoveFromCategory/' + categoryId,{})
     }
-    getAllFiltered(collectionId: string, searchQuery: string): Observable<APIResponse<GoalModel[]>> {
+    getAllFiltered(collectionId: string = '', searchQuery: string = ''): Observable<APIResponse<GoalModel[]>> {
         return this.httpClient.get<APIResponse<GoalModel[]>>(this.apiControllerUrl, { params: {collectionId: collectionId, searchQuery: searchQuery}});
     }
     create(model: GoalModel): Observable<APIResponse<GoalModel>> {

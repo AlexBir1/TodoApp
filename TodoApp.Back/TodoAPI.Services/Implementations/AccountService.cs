@@ -56,13 +56,13 @@ namespace TodoAPI.Services.Implementations
         {
             var account = await _dBRepo.AccountRepo.GetAllAsync(x => x.Email == model.UserIdentifier || x.UserName == model.UserIdentifier || x.PhoneNumber == model.UserIdentifier);
 
-            if (account.Single() == null)
+            if (!account.Any())
                 throw new Exception("Invalid login or password.");
 
-            if(!await _dBRepo.AccountRepo.CheckPasswordAsync(account.Single(), model.Password))
+            if (!await _dBRepo.AccountRepo.CheckPasswordAsync(account.First(), model.Password))
                 throw new Exception("Invalid login or password.");
 
-            var token = TokenMaker.CreateToken(account.Single(), new TokenDescriptorModel
+            var token = TokenMaker.CreateToken(account.First(), new TokenDescriptorModel
             {
                 Key = _config["JWT:Key"]!,
                 ExpiresInDays = Convert.ToInt32(_config["JWT:ExpiresInDays"]!),
@@ -70,7 +70,7 @@ namespace TodoAPI.Services.Implementations
 
             return new APIResponse<AuthorizationModel>(true, new AuthorizationModel
             {
-                AccountId = account.Single().Id,
+                AccountId = account.First().Id,
                 Token = token.Token,
                 TokenExpirationDate = token.ValidTo,
                 KeepAuthorized = model.KeepAuthorized
@@ -86,7 +86,21 @@ namespace TodoAPI.Services.Implementations
                 UserName = model.Username
             });
 
-            _dBRepo.AccountRepo.SetPassword(result, model.PasswordConfirm);
+            bool passwordCreated = await _dBRepo.AccountRepo.SetPassword(result, model.PasswordConfirm);
+
+            if (!passwordCreated)
+            {
+                await _dBRepo.AccountRepo.DeleteAsync(result.Id);
+                throw new Exception("Error while saving account password.");
+            }
+
+            await _dBRepo.CollectionRepo.CreateAsync(new Collection
+            {
+                Title = "Unsorted",
+                AccountId = result.Id,
+            });
+
+            await _dBRepo.CommitAsync();
 
             var token = TokenMaker.CreateToken(result, new TokenDescriptorModel
             {

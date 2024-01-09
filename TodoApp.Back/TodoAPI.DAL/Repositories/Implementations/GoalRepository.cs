@@ -24,12 +24,14 @@ namespace TodoAPI.DAL.Repositories.Implementations
 
         public async Task AddToCategory(string goalId, string categoryId)
         {
-            await _context.CategoriesGoals.AddAsync(new CategoryGoal { CategoryId = Guid.Parse(goalId), GoalId = Guid.Parse(categoryId) });
+            await _context.CategoriesGoals.AddAsync(new CategoryGoal { CategoryId = Guid.Parse(categoryId), GoalId = Guid.Parse(goalId) });
         }
 
         public async Task<Goal> CreateAsync(Goal entity)
         {
-            var result = await _context.AddAsync(entity);
+            entity.CreationDate = DateTime.Now;
+            entity.UpdateDate = DateTime.Now;
+            var result = await _context.Goals.AddAsync(entity);
             return result.Entity;
         }
 
@@ -49,7 +51,7 @@ namespace TodoAPI.DAL.Repositories.Implementations
         {
             List<Goal> goals;
 
-            if(expression != null)
+            if (expression != null)
                 goals = await _context.Goals.Where(expression).Include(x => x.GoalCategories).ThenInclude(x => x.Category).AsNoTracking().ToListAsync();
             else
                 goals = await _context.Goals.Include(x => x.GoalCategories).ThenInclude(x => x.Category).AsNoTracking().ToListAsync();
@@ -57,22 +59,37 @@ namespace TodoAPI.DAL.Repositories.Implementations
             if (goals.Count == 0)
                 throw new Exception("No goals for now.");
 
+            foreach (var goal in goals)
+            {
+                foreach (var gc in goal.GoalCategories)
+                {
+                    gc.Goal = null;
+                    gc.Category.CategoryGoals = null;
+                }
+            }
+
             return goals;
         }
 
         public async Task<Goal> GetByIdAsync(string id)
         {
-            var goal = await _context.Goals.Include(x=>x.Attachments).Include(x=>x.GoalCategories).ThenInclude(x=>x.Category).AsNoTracking().SingleOrDefaultAsync(x=>x.Id == Guid.Parse(id));
+            var goal = await _context.Goals.Include(x => x.Attachments).Include(x => x.GoalCategories).ThenInclude(x => x.Category).AsNoTracking().SingleOrDefaultAsync(x => x.Id == Guid.Parse(id));
 
             if (goal == null)
                 throw new Exception("No such goal is found.");
+
+            foreach (var gc in goal.GoalCategories)
+            {
+                gc.Goal = null;
+                gc.Category.CategoryGoals = null;
+            }
 
             return goal;
         }
 
         public void RemoveFromCategory(string goalId, string categoryId)
         {
-            _context.CategoriesGoals.Remove(new CategoryGoal { CategoryId = Guid.Parse(goalId), GoalId = Guid.Parse(categoryId) });
+            _context.CategoriesGoals.Remove(new CategoryGoal { CategoryId = Guid.Parse(categoryId), GoalId = Guid.Parse(goalId) });
         }
 
         public async Task<Goal> UpdateAsync(string id, Goal entity)
@@ -82,9 +99,12 @@ namespace TodoAPI.DAL.Repositories.Implementations
 
             entity.Id = Guid.Parse(id);
 
-            var result = _context.Update(entity);
+            entity.UpdateDate = DateTime.Now;
 
-            return result.Entity;
+            _context.Goals.Attach(entity);
+            _context.Entry(entity).State = EntityState.Modified;
+
+            return entity;
         }
     }
 }

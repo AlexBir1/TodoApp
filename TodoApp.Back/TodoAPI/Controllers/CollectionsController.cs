@@ -22,7 +22,7 @@ namespace TodoAPI.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IAPIResponse<IEnumerable<Collection>>>> GetAllAsync() => Ok(await _serviceRepo.CollectionService.GetAllAsync());
+        public async Task<ActionResult<IAPIResponse<IEnumerable<Collection>>>> GetAllAsync([FromQuery] string accountId) => Ok(await _serviceRepo.CollectionService.GetAllAsync(x=>x.AccountId == accountId));
 
         [HttpGet("{id}")]
         public async Task<ActionResult<IAPIResponse<Collection>>> GetByIdAsync(string id) => Ok(await _serviceRepo.CollectionService.GetByIdAsync(id));

@@ -2,13 +2,14 @@ import { HttpEvent, HttpHandler, HttpInterceptor, HttpRequest } from "@angular/c
 import { Injectable } from "@angular/core";
 import { Observable } from "rxjs";
 import { AccountService } from "../services/implementations/account.service";
+import { AuthorizedAccountService } from "../services/implementations/authorized-account.service";
 import { LocalStorageService } from "../services/local-storage.service";
 import { AuthorizationModel } from "../shared/models/authorization.model";
 import { makeHeaderWithAuthorization } from "../utilities/make-jwt-header";
 
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor{
-    constructor(private localStorage: LocalStorageService<AuthorizationModel>, private accountService: AccountService){}
+    constructor(private localStorage: LocalStorageService, private accountService: AccountService, private authAccountService: AuthorizedAccountService){}
 
     intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
         var account = this.localStorage.getAccountFromStorage();
@@ -23,6 +24,7 @@ export class AuthInterceptor implements HttpInterceptor{
                         next: (r) => {
                             if(r.isSuccess){
                                 this.localStorage.addAccountToStorage(r.data);
+                                this.authAccountService.addAccount(r.data);
                             }
                         },
                         error: (e) =>{
@@ -31,9 +33,8 @@ export class AuthInterceptor implements HttpInterceptor{
                 }
             }
             else{
-                if(!this.validateToken(account)){
-                    this.localStorage.removeAccountFromStorage();
-                }
+                this.localStorage.removeAccountFromStorage();
+                this.authAccountService.removeAccount();
             }
             return next.handle(req.clone({headers: makeHeaderWithAuthorization(account.token)}));
         }

@@ -16,10 +16,10 @@ export class AccountService implements IAccountService{
     constructor(private httpClient: HttpClient){}
 
     signUp(model: SignUpModel): Observable<APIResponse<AuthorizationModel>> {
-        return this.httpClient.put<APIResponse<AuthorizationModel>>(this.apiControllerUrl + 'SignUp', model);
+        return this.httpClient.post<APIResponse<AuthorizationModel>>(this.apiControllerUrl + 'SignUp', model);
     }
     signIn(model: SignInModel): Observable<APIResponse<AuthorizationModel>> {
-        return this.httpClient.put<APIResponse<AuthorizationModel>>(this.apiControllerUrl + 'SignIn', model);
+        return this.httpClient.post<APIResponse<AuthorizationModel>>(this.apiControllerUrl + 'SignIn', model);
     }
     getById(id: string): Observable<APIResponse<AccountModel>> {
         return this.httpClient.get<APIResponse<AccountModel>>(this.apiControllerUrl + id);
