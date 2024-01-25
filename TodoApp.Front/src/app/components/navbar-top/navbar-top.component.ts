@@ -8,8 +8,9 @@ import { FormControl, FormGroup, Validators } from '@angular/forms';
 })
 export class NavbarTopComponent implements OnInit{
   @Output() changeIsNavbarShowingEvent: EventEmitter<any> = new EventEmitter<any>();
-  @Output() logOutEvent: EventEmitter<any> = new EventEmitter<any>();
+  @Output() logOutActiveEvent: EventEmitter<any> = new EventEmitter<any>();
   @Output() searchGoalsEvent: EventEmitter<string> = new EventEmitter<string>();
+  @Output() changeMenuOpened: EventEmitter<any> = new EventEmitter<any>();
 
   searchForm!: FormGroup;
 
@@ -23,14 +24,26 @@ export class NavbarTopComponent implements OnInit{
     });
   }
 
+  onChangeMenuOpened(){
+    this.changeMenuOpened.emit();
+  }
+
   onlogOut(){
-    this.logOutEvent.emit();
+    this.logOutActiveEvent.emit();
   }
   onChangeIsNavbarShowing(){
     this.changeIsNavbarShowingEvent.emit();
   }
 
   onSearchGoals(){
-    this.searchGoalsEvent.emit(this.searchForm.controls['query'].value);
+    let value = this.searchForm.controls['query'].value;
+    if(value)
+      this.searchGoalsEvent.emit(value);
+  }
+
+  onEmptyValue(){
+    let value = this.searchForm.controls['query'].value;
+    if(!value)
+      this.searchGoalsEvent.emit("");
   }
 }

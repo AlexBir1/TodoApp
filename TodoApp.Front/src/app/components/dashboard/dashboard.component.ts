@@ -7,11 +7,13 @@ import { CategoryService } from 'src/app/services/implementations/category.servi
 import { CollectionService } from 'src/app/services/implementations/collection.service';
 import { GoalService } from 'src/app/services/implementations/goal.service';
 import { LocalStorageService } from 'src/app/services/local-storage.service';
+import { SignalRService } from 'src/app/services/signalr.service';
 import { AuthorizationModel } from 'src/app/shared/models/authorization.model';
 import { CategoryModel } from 'src/app/shared/models/category.model';
 import { CollectionModel } from 'src/app/shared/models/collection.model';
 import { GoalCategory } from 'src/app/shared/models/goal-category.model';
 import { GoalModel } from 'src/app/shared/models/goal.model';
+import { PageParams } from 'src/app/shared/page-params';
 
 @Component({
   selector: 'app-dashboard',
@@ -28,12 +30,101 @@ export class DashboardComponent implements OnInit{
 
   selectedCollection!: CollectionModel;
   selectedGoal!: GoalModel | null;
+  message!: string | null;
 
+  pageParams!: PageParams;
+  responseErrors: string[] | null = null;
+  selectedCategoryId: string | null = null;
+
+  isLoadingState: boolean = false;
+  isMenuOpened: boolean = false;
+  isLogoutModalActive: boolean = false;
+  
   constructor(private localStorage: LocalStorageService, private accountService: AccountService, public aaService: AuthorizedAccountService,
-    private goalService: GoalService, private collectionService: CollectionService, private categoryService: CategoryService, private router: Router){}
+    private goalService: GoalService, private collectionService: CollectionService, private categoryService: CategoryService, private router: Router, 
+    private signalRService: SignalRService){}
+    
   ngOnInit(): void {
+    this.pageParams = new PageParams(1,1,10);
+    this.signalRService.startConnection();
+    this.signalRService.listen();
+    this.signalRService.messageSource.subscribe(x=>this.message = x);
     this.refreshAuthToken();
     this.refresh();
+  }
+
+  changeIsLogoutModalActive(){
+    this.isLogoutModalActive = !this.isLogoutModalActive;
+  }
+
+  onChangeMenuOpened(){
+    this.isMenuOpened = !this.isMenuOpened;
+  }
+
+  onEnableLoadingState(){
+    this.isLoadingState = true;
+  }
+
+  onDisableLoadingState(){
+    this.isLoadingState = false;
+  }
+
+  onClosedNotification(){
+    this.message = null;
+  }
+
+  onClosedError(){
+    this.responseErrors = null;
+  }
+
+  setResponseErrors(errors: string[]){
+    this.responseErrors = errors;
+  }
+
+  onGoalsPageChanged(pageParams: PageParams){
+    this.isLoadingState =  true;
+    this.pageParams = pageParams;
+    if(this.selectedCategoryId){
+      let category = this.categories.find(x=>x.id === this.selectedCategoryId);
+      this.goalService.getAllFiltered(this.selectedCollection.id, category?.colorTitle, pageParams.itemsPerPage, pageParams.selectedPage).subscribe({
+        next: (result) => {
+          this.isLoadingState = false;
+          if(result.isSuccess){
+            this.goals = result.data;
+            this.pageParams = new PageParams(result.itemsCount, result.selectedPage, result.itemsPerPage);
+          }
+          else{
+            this.responseErrors = result.messages;
+            this.goals = [];
+            this.pageParams = new PageParams(1,1,1);
+          }
+        },
+        error: (error) => {
+          this.isLoadingState = false;
+          console.log(error);
+        },
+      });
+    }
+    else
+    this.isLoadingState =  true;
+      this.goalService.getAllFiltered(this.selectedCollection.id, '', pageParams.itemsPerPage, pageParams.selectedPage).subscribe({
+        next: (result) => {
+          this.isLoadingState = false;
+          if(result.isSuccess){
+            this.goals = result.data;
+            this.pageParams = new PageParams(result.itemsCount, result.selectedPage, result.itemsPerPage);
+          }
+          else{
+            this.responseErrors = result.messages;
+            this.goals = [];
+            this.pageParams = new PageParams(1,1,1);
+          }
+        },
+        error: (error) => {
+          this.isLoadingState = false;
+          console.log(error);
+        },
+      });
   }
 
   setSelectedGoal(goal: GoalModel){
@@ -50,49 +141,93 @@ export class DashboardComponent implements OnInit{
 
   onSearchGoalsByQuery(query: string){
     this.selectedGoal = null;
-    this.goalService.getAllFiltered('', query).subscribe({
-      next: (result) => {
-        if(result.isSuccess){
-          this.goals = result.data;
-        }
-        else{
-          this.goals = [];
-        }
-      },
-      error: (error) => {
-        console.log(error);
-      },
-    });
-  }
-
-  onChangedSelectedCategory(categoryId: string){
-    if(categoryId){
-      let category = this.categories.find(x=>x.id === categoryId);
-      this.goalService.getAllFiltered(this.selectedCollection!.id, category!.colorTitle).subscribe({
+    this.isLoadingState =  true;
+      if(query.length > 0){
+      this.goalService.getAllFiltered('', query, this.pageParams.itemsPerPage, this.pageParams.selectedPage).subscribe({
         next: (result) => {
+          this.isLoadingState = false;
           if(result.isSuccess){
             this.goals = result.data;
+            this.pageParams = new PageParams(result.itemsCount, result.selectedPage, result.itemsPerPage);
           }
           else{
+            this.responseErrors = result.messages;
             this.goals = [];
+            this.pageParams = new PageParams(1,1,1);
           }
         },
         error: (error) => {
+          this.isLoadingState = false;
           console.log(error);
         },
       });
     }
     else{
-      this.goalService.getAllFiltered(this.selectedCollection!.id).subscribe({
+      this.goalService.getAllFiltered(this.selectedCollection.id, '', this.pageParams.itemsPerPage, this.pageParams.selectedPage).subscribe({
         next: (result) => {
+          this.isLoadingState = false;
           if(result.isSuccess){
             this.goals = result.data;
+            this.pageParams = new PageParams(result.itemsCount, result.selectedPage, result.itemsPerPage);
           }
           else{
+            this.responseErrors = result.messages;
             this.goals = [];
+            this.pageParams = new PageParams(1,1,1);
           }
         },
         error: (error) => {
+          this.isLoadingState = false;
+          console.log(error);
+        },
+      });
+    }
+  }
+
+  onChangedSelectedCategory(categoryId: string){
+    this.isLoadingState =  true;
+    this.selectedCategoryId = categoryId;
+    if(categoryId){
+      let category = this.categories.find(x=>x.id === categoryId);
+      this.goalService.getAllFiltered(this.selectedCollection!.id, category!.colorTitle, this.pageParams.itemsPerPage, this.pageParams.selectedPage).subscribe({
+        next: (result) => {
+          this.isLoadingState = false;
+          if(result.isSuccess){
+            this.goals = result.data;
+            this.pageParams = new PageParams(result.itemsCount, result.selectedPage, result.itemsPerPage);
+            this.selectedCategoryId = categoryId;
+          }
+          else{
+            this.responseErrors = result.messages;
+            this.goals = [];
+            this.pageParams = new PageParams(1,1,1);
+            this.selectedCategoryId = null;
+          }
+        },
+        error: (error) => {
+          this.isLoadingState = false;
+          console.log(error);
+        },
+      });
+    }
+    else{
+      this.goalService.getAllFiltered(this.selectedCollection!.id, '', this.pageParams.itemsPerPage, this.pageParams.selectedPage).subscribe({
+        next: (result) => {
+          this.isLoadingState = false;
+          if(result.isSuccess){
+            this.goals = result.data;
+            this.pageParams = new PageParams(result.itemsCount, result.selectedPage, result.itemsPerPage);
+            this.selectedCategoryId = null;
+          }
+          else{
+            this.responseErrors = result.messages;
+            this.goals = [];
+            this.pageParams = new PageParams(1,1,1);
+            this.selectedCategoryId = null;
+          }
+        },
+        error: (error) => {
+          this.isLoadingState = false;
           console.log(error);
         },
       });
@@ -121,54 +256,71 @@ export class DashboardComponent implements OnInit{
   }
 
   onGoalAddedToCategory(goalCategory: GoalCategory){
-    this.selectedGoal!.goalCategories.push(goalCategory);
+    let index = this.goals.findIndex(x=>x.id === goalCategory.goalId);
+    let category = this.categories.find(x=>x.id === goalCategory.categoryId);
+    goalCategory.category = category as CategoryModel;
+    this.goals[index].goalCategories.push(goalCategory);
   }
 
   onGoalRemovedFromCategory(goalCategory: GoalCategory){
-    let index = this.selectedGoal!.goalCategories.findIndex(x=>x.categoryId === goalCategory.categoryId && x.goalId === goalCategory.goalId);
-    this.selectedGoal!.goalCategories.splice(index,1);
+    let index = this.goals.find(x=>x.id === goalCategory.goalId)!.goalCategories.findIndex(x=>x.categoryId === goalCategory.categoryId);
+    this.goals.find(x=>x.id === goalCategory.goalId)!.goalCategories.splice(index,1);
   }
 
   getAllGoalsInCollection(collection: CollectionModel){
     this.selectedCollection = collection;
-    this.goalService.getAllFiltered(collection.id).subscribe({
+    this.isLoadingState =  true;
+    this.goalService.getAllFiltered(collection.id, '', this.pageParams.itemsPerPage).subscribe({
       next: (result) => {
+        this.isLoadingState = false;
         if(result.isSuccess){
           this.goals = result.data;
+          this.pageParams = new PageParams(result.itemsCount, result.selectedPage, result.itemsPerPage);
         }
         else{
+          this.responseErrors = result.messages;
           this.goals = [];
+          this.pageParams = new PageParams(1,1,1);
         }
       },
       error: (error) => {
+        this.isLoadingState = false;
         console.log(error);
       },
     });
   }
 
   getCollections(){
+    this.isLoadingState =  true;
     this.collectionService.getAllFiltered(this.account.accountId).pipe(map(x=>{
       this.selectedCollection = x.data.find(x=>x.title === 'Unsorted') as CollectionModel;
-      this.getAllGoalsInCollection(this.selectedCollection);
       return x;
     })).subscribe({
       next: (result) =>{
+        this.isLoadingState = false;
         if(result.isSuccess)
           this.collections = result.data;
+        else 
+          this.responseErrors = result.messages;
       },
       error: (error) => {
+        this.isLoadingState = false;
         console.log(error);
       }
-    });
+    })
+    .add(() => this.getAllGoalsInCollection(this.selectedCollection));
   }
 
   getCategories(){
+    this.isLoadingState =  true;
     this.categoryService.getAllFiltered(this.account.accountId).subscribe({
-      next: (result) =>{
+      next: (result) => {
+        this.isLoadingState = false;
         if(result.isSuccess)
           this.categories = result.data;
       },
       error: (error) => {
+        this.isLoadingState = false;
         console.log(error);
       }
     })

@@ -1,0 +1,9 @@
+<div class="alert alert-dismissible alert-danger">
+    <button type="button" class="btn-close" (click)="close()"></button>
+    <ul>
+        <li *ngFor="let error of errors">{{error}}</li>
+    </ul>
+    <div class="text-end">
+        Close in: {{lifeTimeSecs}}
+    </div>
+  </div>

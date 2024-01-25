@@ -1,75 +1,83 @@
-<div class="container-fluid">
-<div class="row justify-content-center">
-    <div class="col-lg-7" *ngIf="!isSignIn">
-        <form class="card" [formGroup]="signUpForm" (submit)="signUp()"> 
-            <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <h4>Sign up</h4>
-                    <button type="button" class="btn btn-primary" (click)="changeIsSignIn()">To sign in</button>
+<div class="container-fluid" style="background-color: darkgrey; height: 100svh;">
+    <div class="row justify-content-center">
+        <div class="col-lg-6" style="margin-top:10%">
+            <form class="card" *ngIf="!isSignIn" [formGroup]="signUpForm" (submit)="signUp()"> 
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-content-center">
+                        <h3>Sign Up</h3>
+                        <button type="button" class="btn btn-primary" (click)="changeIsSignIn()">To Sign In</button>
+                    </div>
+                    <hr>
+                    <div class="input-group mb-2">
+                        <span class="input-group-text">Username</span>
+                        <input class="form-control" formControlName="username">
+                    </div>
+                    <span *ngIf="signUpForm.controls['username'].dirty && signUpForm.hasError('required','username')" class="text-danger bold mb-4">Field is required</span>
+                    <div class="input-group mb-2">
+                        <span class="input-group-text">Phone number</span>
+                        <input class="form-control" formControlName="phoneNumber">
+                    </div>
+                    <span *ngIf="signUpForm.controls['phoneNumber'].dirty && signUpForm.hasError('required','phoneNumber')" class="text-danger bold mb-4">Field is required</span>
+                    <div class="input-group mb-2">
+                        <span class="input-group-text">Email</span>
+                        <input class="form-control" formControlName="email">
+                    </div>
+                    <span *ngIf="signUpForm.controls['email'].dirty && signUpForm.hasError('required','email')" class="text-danger bold mb-4">Field is required</span>
+                    <div class="input-group mb-2">
+                        <span class="input-group-text">Password</span>
+                        <input class="form-control" formControlName="password">
+                    </div>
+                    <span *ngIf="signUpForm.controls['password'].dirty && signUpForm.hasError('required','password')" class="text-danger bold mb-4">Field is required</span>
+                    <div class="input-group mb-2">
+                        <span class="input-group-text">Confirm Password</span>
+                        <input class="form-control" formControlName="passwordConfirm">
+                    </div>
+                    <span *ngIf="signUpForm.controls['passwordConfirm'].dirty && signUpForm.hasError('required','passwordConfirm')" class="text-danger bold mb-4">Field is required</span>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="flexSwitchCheckDefault" formControlName="keepAuthorized">
+                        <label class="form-check-label" for="flexSwitchCheckDefault">Keep me signed in</label>
+                    </div>
+                    <div class="text-center">
+                        <button class="btn btn-success">Sign Up</button>
+                    </div>
                 </div>
-                <hr>
-                <div class="input-group mb-2">
-                    <span class="input-group-text">Username</span>
-                    <input class="form-control" formControlName="username">
+            </form>
+            <form class="card" *ngIf="isSignIn" [formGroup]="signInForm" (submit)="signIn()">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-content-center">
+                        <h3>Sign In</h3>
+                        <button type="button" class="btn btn-primary" (click)="changeIsSignIn()">To Sign Up</button>
+                    </div>
+                    <hr>
+                    <div class="input-group mb-2">
+                        <span class="input-group-text">Username, email or phone</span>
+                        <input class="form-control" formControlName="userIdentifier">
+                    </div>
+                    <span *ngIf="signInForm.controls['userIdentifier'].dirty && signInForm.hasError('required','userIdentifier')" class="text-danger bold mb-4">Field is required</span>
+                    <div class="input-group mb-2">
+                        <span class="input-group-text">Password</span>
+                        <input class="form-control" formControlName="password">
+                    </div>
+                    <span *ngIf="signInForm.controls['password'].dirty && signInForm.hasError('required','password')" class="text-danger bold mb-4">Field is required</span>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="flexSwitchCheckDefault" formControlName="keepAuthorized"> 
+                        <label class="form-check-label" for="flexSwitchCheckDefault">Keep me signed in</label>
+                    </div>
+                    <div class="text-center">
+                        <button class="btn btn-success">Sign In</button>
+                    </div>
                 </div>
-                <span *ngIf="signUpForm.controls['username'].dirty && signUpForm.hasError('required','username')" class="text-danger bold mb-4">Field is required</span>
-                <div class="input-group mb-2">
-                    <span class="input-group-text">Phone number</span>
-                    <input class="form-control" formControlName="phoneNumber">
-                </div>
-                <span *ngIf="signUpForm.controls['phoneNumber'].dirty && signUpForm.hasError('required','phoneNumber')" class="text-danger bold mb-4">Field is required</span>
-                <div class="input-group mb-2">
-                    <span class="input-group-text">Email</span>
-                    <input class="form-control" formControlName="email">
-                </div>
-                <span *ngIf="signUpForm.controls['email'].dirty && signUpForm.hasError('required','email')" class="text-danger bold mb-4">Field is required</span>
-                <div class="input-group mb-2">
-                    <span class="input-group-text">Password</span>
-                    <input class="form-control" formControlName="password">
-                </div>
-                <span *ngIf="signUpForm.controls['password'].dirty && signUpForm.hasError('required','password')" class="text-danger bold mb-4">Field is required</span>
-                <div class="input-group mb-2">
-                    <span class="input-group-text">Confirm Password</span>
-                    <input class="form-control" formControlName="passwordConfirm">
-                </div>
-                <span *ngIf="signUpForm.controls['passwordConfirm'].dirty && signUpForm.hasError('required','passwordConfirm')" class="text-danger bold mb-4">Field is required</span>
-                <div class="form-check form-switch">
-                    <input class="form-check-input" type="checkbox" id="flexSwitchCheckDefault" formControlName="keepAuthorized">
-                    <label class="form-check-label" for="flexSwitchCheckDefault">Keep me signed in</label>
-                </div>
-                <div class="text-center">
-                    <button class="btn btn-success">Sign up</button>
-                </div>
-            </div>
-        </form>
-    </div>
-    <div class="col-lg-7" *ngIf="isSignIn">
-        <form class="card" [formGroup]="signInForm" (submit)="signIn()">
-            <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <h4>Sign in</h4>
-                    <button type="button" class="btn btn-primary" (click)="changeIsSignIn()">To sign up</button>
-                </div>
-                <hr>
-                <div class="input-group mb-2">
-                    <span class="input-group-text">Login</span>
-                    <input class="form-control" formControlName="userIdentifier">
-                </div>
-                <span *ngIf="signInForm.controls['userIdentifier'].dirty && signInForm.hasError('required','userIdentifier')" class="text-danger bold mb-4">Field is required</span>
-                <div class="input-group mb-2">
-                    <span class="input-group-text">Password</span>
-                    <input class="form-control" formControlName="password">
-                </div>
-                <span *ngIf="signInForm.controls['password'].dirty && signInForm.hasError('required','password')" class="text-danger bold mb-4">Field is required</span>
-                <div class="form-check form-switch">
-                    <input class="form-check-input" type="checkbox" id="flexSwitchCheckDefault" formControlName="keepAuthorized"> 
-                    <label class="form-check-label" for="flexSwitchCheckDefault">Keep me signed in</label>
-                </div>
-                <div class="text-center">
-                    <button class="btn btn-success">Sign in</button>
-                </div>
-            </div>
-        </form>
+            </form>
+        </div>
+    </div>  
+</div>
+<div class="position-fixed" style="bottom: 5px; width:100%;">
+    <div class="container">
+      <div class="row justify-content-center">
+        <div class="col-lg-6">
+          <app-error *ngIf="responseErrors" [errors]="responseErrors" (closedEvent)="onClosedError()"></app-error>
+        </div>
+      </div>
     </div>
 </div>
-</div>
+<app-loader *ngIf="isLoadingState"></app-loader>

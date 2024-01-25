@@ -1,25 +1,44 @@
-<div class="container-fluid" style="background-color: rgba(107, 103, 103, 0.295);">
+<div class="container-fluid" style="background-color: rgb(197, 197, 197);">
     <app-navbar-top 
-      (logOutEvent)="logOut()" 
+      (logOutActiveEvent)="changeIsLogoutModalActive()" 
       (changeIsNavbarShowingEvent)="changeIsNavbarShowing()"
       (searchGoalsEvent)="onSearchGoalsByQuery($event)"
-    ></app-navbar-top>
-  </div>
-  <div class="container-fluid">
+      (changeMenuOpened)="onChangeMenuOpened()"
+    >
+  </app-navbar-top>
+</div>
     <div class="container-fluid">
-      <div class="row justify-content-center">
-          <div class="col-lg-3 mt-2" *ngIf="isNavbarShowing">
-            <app-categories [categories]="categories"></app-categories>
+      <div class="row" 
+      [class.justify-content-end]="(isNavbarShowing && !selectedGoal)"
+      [class.justify-content-start]="(!isNavbarShowing && selectedGoal)"
+      [class.justify-content-center]="(isNavbarShowing && selectedGoal)"
+      >
+          <div class="col-xl-3 col-lg-4 col-md-4 col-12 p-3 position-fixed" *ngIf="isNavbarShowing" style="background-color:rgb(226, 226, 226); border-right: 2px solid rgba(197, 189, 189, 0.521); left:0; height:100%; z-index:47">
+            <app-categories [categories]="categories" 
+            (errorResponseEvent)="setResponseErrors($event)"
+            (selectedCategoryEvent)="onChangedSelectedCategory($event)"
+            >
+          </app-categories>
             <app-collections 
               [collections]="collections" 
               (selectedCollectionEvent)="getAllGoalsInCollection($event)" 
-              (deletedCollectionEvent)="setDefaultCollectionAfterDelete($event)">
+              (deletedCollectionEvent)="setDefaultCollectionAfterDelete($event)"
+              (enableLoadingState)="onEnableLoadingState()"
+              (disableLoadingState)="onDisableLoadingState()"
+              (errorResponseEvent)="setResponseErrors($event)"
+              >
             </app-collections>
           </div>
-          <div class="mt-2" 
+          <div class="p-3 col-12 position-fixed"
           [class.col-lg-12]="!isNavbarShowing && !selectedGoal" 
-          [class.col-lg-6]="isNavbarShowing && selectedGoal != null" 
-          [class.col-lg-9]="(isNavbarShowing && !selectedGoal) || (!isNavbarShowing && selectedGoal)">
+          [class.col-lg-4]="isNavbarShowing && selectedGoal != null" 
+          [class.col-xl-6]="isNavbarShowing && selectedGoal != null" 
+          [class.col-md-4]="isNavbarShowing && selectedGoal != null" 
+          [class.col-lg-8]="(isNavbarShowing && !selectedGoal) || (!isNavbarShowing && selectedGoal)"
+          [class.col-md-8]="(isNavbarShowing && !selectedGoal) || (!isNavbarShowing && selectedGoal)"
+          [class.col-xl-9]="(isNavbarShowing && !selectedGoal) || (!isNavbarShowing && selectedGoal)"
+          style="z-index:45"
+          >
             <app-goals 
               [goals]="goals" 
               [collection]="selectedCollection" 
@@ -29,12 +48,16 @@
               (deletedGoalEvent)="removeSelectedGoal()"
               (updatedGoalEvent)="onUpdatedGoal($event)"
               (changedSelectedCategoryEvent)="onChangedSelectedCategory($event)"
+              (pageChangedEvent)="onGoalsPageChanged($event)"
+              (errorResponseEvent)="setResponseErrors($event)"
+              [pageParams]="pageParams"
+              (enableLoadingState)="onEnableLoadingState()"
+              (disableLoadingState)="onDisableLoadingState()"
               >
             </app-goals>
           </div>
-          <div class="col-lg-3 mt-2">
+          <div *ngIf="selectedGoal" class="col-xl-3 col-lg-4 col-md-4 p-3 col-12 position-fixed" style="background-color:rgb(226, 226, 226); border-left: 2px solid rgba(197, 189, 189, 0.521); z-index:46; right:0; height:100%"> 
             <app-goal-details 
-              *ngIf="selectedGoal" 
               [goal]="selectedGoal" 
               [categories]="categories"
               (closedGoalDetailsEvent)="removeSelectedGoal()" 
@@ -42,9 +65,31 @@
               (addedToCategoryEvent)="onGoalAddedToCategory($event)"
               (removedFromCategoryEvent)="onGoalRemovedFromCategory($event)"
               (updatedGoalEvent)="onUpdatedGoal($event)"
+              (errorResponseEvent)="setResponseErrors($event)"
               >
             </app-goal-details>
           </div>
       </div>
     </div>
+  <div class="position-fixed" style="bottom: 5px; right:20px; width:100%; z-index: 100" >
+    <div class="container-fluid">
+      <div class="row justify-content-end">
+        <div class="col-lg-3">
+          <app-notification *ngIf="message" [message]="message" (closedEvent)="onClosedNotification()"></app-notification>
+          <app-error *ngIf="responseErrors" [errors]="responseErrors" (closedEvent)="onClosedError()"></app-error>
+        </div>
+      </div>
+    </div>
   </div>
+  <app-loader *ngIf="isLoadingState" style="z-index: 105"></app-loader>
+  <app-menu-popup *ngIf="isMenuOpened" 
+  (changeMenuOpened)="onChangeMenuOpened()"
+  (logOutActiveEvent)="changeIsLogoutModalActive()" 
+  >
+</app-menu-popup>
+<app-logout-popup
+  (logOutEvent)="logOut()"
+  (closeEvent)="changeIsLogoutModalActive()"
+  *ngIf="isLogoutModalActive"
+></app-logout-popup>
+

@@ -19,10 +19,12 @@ export class AttachmentService implements IAttachmentService{
         return this.httpClient.delete<APIResponse<AttachmentModel>>(this.apiControllerUrl + id);
     }
     save(id: string): Observable<Blob> {
-        return this.httpClient.get<Blob>(this.apiControllerUrl + id);
+        return this.httpClient.get(this.apiControllerUrl + id + '/Save', { responseType: 'blob' } );
     }
     create(goalId: string, file: File): Observable<APIResponse<AttachmentModel>> {
-        return this.httpClient.post<APIResponse<AttachmentModel>>(this.apiControllerUrl + goalId, file);
+        var formData = new FormData();
+        formData.append('file', file);
+        return this.httpClient.post<APIResponse<AttachmentModel>>(this.apiControllerUrl + goalId, formData);
     }
 
 }

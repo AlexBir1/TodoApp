@@ -1,5 +1,6 @@
 import { Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
+import { AttachmentService } from 'src/app/services/implementations/attachment.service';
 import { CategoryService } from 'src/app/services/implementations/category.service';
 import { GoalService } from 'src/app/services/implementations/goal.service';
 import { CategoryModel } from 'src/app/shared/models/category.model';
@@ -21,18 +22,90 @@ export class GoalDetailsComponent implements OnInit, OnChanges{
   @Output() addedToCategoryEvent: EventEmitter<GoalCategory> = new EventEmitter<GoalCategory>();
   @Output() removedFromCategoryEvent: EventEmitter<GoalCategory> = new EventEmitter<GoalCategory>();
 
+  @Output() errorResponseEvent: EventEmitter<string[]> = new EventEmitter<string[]>();
+
   goalForm!: FormGroup;
   isAddingCategoryMode: boolean = false;
 
 
-  constructor(private goalService: GoalService){
+  constructor(private goalService: GoalService, private attachmentService: AttachmentService){
   }
   ngOnChanges(changes: SimpleChanges): void {
     this.initializeGoalForm();
+    this.goal = this.goal;
   }
   ngOnInit(): void {
     this.initializeGoalForm();
   }
+
+  onFileInputChange(goalId: string, event: any){
+    let file = event?.target?.files[0] as File; 
+    this.attachmentService.create(goalId, file).subscribe({
+      next: (result) => {
+        if(result.isSuccess){
+          this.goal?.attachments.push(result.data);
+        }
+        else
+          this.errorResponseEvent.emit(result.messages);
+      },
+      error: (error) => {
+
+      }
+    });
+  }
+
+  downloadFile(filename: string, fileId: string){
+    this.attachmentService.save(fileId).subscribe({
+      next: (result) => {
+        if(result){
+          let file = new Blob([result as Blob], { type: result.type });
+          let url = URL.createObjectURL(file);
+          const a = document.createElement('a');
+          a.setAttribute('style', 'display:none;');
+          document.body.appendChild(a);
+          a.download = filename;
+          a.href = url;
+          a.target = '_self';
+          a.click();
+          document.body.removeChild(a);
+        }
+      }
+    })
+  }
+
+  deleteFile(fileId: string){
+    this.attachmentService.delete(fileId).subscribe({
+      next: (result) => {
+        if(result.isSuccess){
+          let index = this.goal!.attachments.findIndex(x=>x.id === result.data.id);
+          this.goal!.attachments.splice(index, 1);
+        }
+        else
+          this.errorResponseEvent.emit(result.messages);
+      },
+      error: (error) => {
+
+      }
+    });
+  }
+
+  onChangeGoalCompletion(sender: any){
+    this.goal!.isCompleted = sender.target.checked;
+    this.goalService.update(this.goal!.id, this.goal!).subscribe({
+      next: (result) => {
+        if(result.isSuccess){
+          this.goal! = result.data;
+          this.updatedGoalEvent.emit(result.data);
+        }
+        else
+          this.errorResponseEvent.emit(result.messages);
+      },
+      error: (error) => {
+
+      }
+    });
+  }
+
 
   updateGoal(){
     let newGoal = this.goalForm.value;
@@ -42,6 +115,8 @@ export class GoalDetailsComponent implements OnInit, OnChanges{
           this.goal = result.data;
           this.updatedGoalEvent.emit(result.data);
         }
+        else
+          this.errorResponseEvent.emit(result.messages);
       },
       error: (error) => {
 
@@ -54,12 +129,13 @@ export class GoalDetailsComponent implements OnInit, OnChanges{
   }
 
   selectCategoryToAdd(category: CategoryModel){
+    this.isAddingCategoryMode = false;
     this.goalService.addToCategory(this.goal!.id, category.id).subscribe({
       next: (result) => {
-        if(result.isSuccess){
-          this.goal?.goalCategories.push(result.data);
+        if(result.isSuccess)
           this.addedToCategoryEvent.emit(result.data);
-        }
+        else
+          this.errorResponseEvent.emit(result.messages);
       },
       error: (error) => {
 
@@ -70,11 +146,10 @@ export class GoalDetailsComponent implements OnInit, OnChanges{
   selectCategoryToRemove(goalCategory: GoalCategory){
     this.goalService.removeFromCategory(this.goal!.id, goalCategory.categoryId).subscribe({
       next: (result) => {
-        if(result.isSuccess){
-          let index = this.goal!.goalCategories.findIndex(x=>x.categoryId == goalCategory.categoryId);
-          this.goal!.goalCategories.splice(index,1);
+        if(result.isSuccess)
           this.removedFromCategoryEvent.emit(result.data);
-        }
+        else
+          this.errorResponseEvent.emit(result.messages);
       },
       error: (error) => {
 
@@ -112,6 +187,8 @@ export class GoalDetailsComponent implements OnInit, OnChanges{
           this.goal = null;
           this.deletedGoalEvent.emit(result.data);
         }
+        else
+          this.errorResponseEvent.emit(result.messages);
       },
       error: (error) => {
 

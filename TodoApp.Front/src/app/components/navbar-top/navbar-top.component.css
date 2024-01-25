@@ -1,0 +1,17 @@
+@media(max-width: 576px){
+    #menuBtn{
+        display: flex;
+    }
+    #btns{
+        display: none;
+    }
+}
+
+@media(min-width: 576px){
+    #btns{
+        display: flex;
+    }
+    #menuBtn{
+        display: none;
+    }
+}

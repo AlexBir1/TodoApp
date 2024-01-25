@@ -18,8 +18,8 @@ export class GoalService implements IGoalService{
     removeFromCategory(goalId: string, categoryId: string): Observable<APIResponse<GoalCategory>> {
         return this.httpClient.patch<APIResponse<GoalCategory>>(this.apiControllerUrl + goalId + '/RemoveFromCategory/' + categoryId,{})
     }
-    getAllFiltered(collectionId: string = '', searchQuery: string = ''): Observable<APIResponse<GoalModel[]>> {
-        return this.httpClient.get<APIResponse<GoalModel[]>>(this.apiControllerUrl, { params: {collectionId: collectionId, searchQuery: searchQuery}});
+    getAllFiltered(collectionId: string = '', searchQuery: string = '', itemsPerPage: number = 1, selectedPage: number = 1): Observable<APIResponse<GoalModel[]>> {
+        return this.httpClient.get<APIResponse<GoalModel[]>>(this.apiControllerUrl, { params: {collectionId: collectionId, searchQuery: searchQuery, itemsPerPage: itemsPerPage, selectedPage: selectedPage}});
     }
     create(model: GoalModel): Observable<APIResponse<GoalModel>> {
         return this.httpClient.post<APIResponse<GoalModel>>(this.apiControllerUrl, model);

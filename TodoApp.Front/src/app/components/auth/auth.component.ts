@@ -17,6 +17,9 @@ export class AuthComponent implements OnInit{
   isSignIn: boolean = true;
   signInForm!: FormGroup;
   signUpForm!: FormGroup;
+  isLoadingState: boolean = false;
+
+  responseErrors: string[] | null = null;
 
   constructor(private accountService: AccountService, private authorizedAccountService: AuthorizedAccountService, 
     private localStorageService: LocalStorageService, private router: Router){}
@@ -46,32 +49,40 @@ export class AuthComponent implements OnInit{
 
   signUp(){
     let signUpModel: SignUpModel = this.signUpForm.value;
+    this.isLoadingState = true;
     this.accountService.signUp(signUpModel).subscribe({
       next: (result) => {
+        this.isLoadingState = false;
         if(result.isSuccess){
           this.authorizedAccountService.addAccount(result.data);
           this.localStorageService.addAccountToStorage(result.data);
           this.router.navigateByUrl('/Dashboard');
         }
+        else 
+          this.responseErrors = result.messages;
       },
       error: (error) => {
-
+        this.isLoadingState = false;
       }
     });
   }
 
   signIn(){
     let signInModel: SignInModel = this.signInForm.value;
+    this.isLoadingState = true;
     this.accountService.signIn(signInModel).subscribe({
       next: (result) => {
+        this.isLoadingState = false;
         if(result.isSuccess){
           this.authorizedAccountService.addAccount(result.data);
           this.localStorageService.addAccountToStorage(result.data);
           this.router.navigateByUrl('/Dashboard');
         }
+        else 
+          this.responseErrors = result.messages;
       },
       error: (error) => {
-
+        this.isLoadingState = false;
       }
     });
   }
@@ -82,5 +93,9 @@ export class AuthComponent implements OnInit{
       this.initializeSignInForm();
     else
     this.initializeSignUpForm();
+  }
+
+  onClosedError(){
+    this.responseErrors = null;
   }
 }

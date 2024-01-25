@@ -20,6 +20,12 @@ import { CategoryService } from './services/implementations/category.service';
 import { CollectionService } from './services/implementations/collection.service';
 import { GoalService } from './services/implementations/goal.service';
 import { NavbarTopComponent } from './components/navbar-top/navbar-top.component';
+import { NgxPaginationModule } from 'ngx-pagination';
+import { NotificationComponent } from './components/notification/notification.component';
+import { ErrorComponent } from './components/error/error.component';
+import { LoaderComponent } from './components/loader/loader.component';
+import { MenuPopupComponent } from './components/menu-popup/menu-popup.component';
+import { LogoutPopupComponent } from './components/logout-popup/logout-popup.component';
 
 const routes: Route[] = [
   { path: 'Dashboard', component: DashboardComponent },
@@ -36,12 +42,18 @@ const routes: Route[] = [
     CategoriesComponent,
     DashboardComponent,
     NavbarTopComponent,
+    NotificationComponent,
+    ErrorComponent,
+    LoaderComponent,
+    MenuPopupComponent,
+    LogoutPopupComponent,
   ],
   imports: [
     BrowserModule,
     HttpClientModule,
     ReactiveFormsModule,
     FormsModule,
+    NgxPaginationModule,
     RouterModule.forRoot(routes)
   ],
   providers: [LocalStorageService, AuthorizedAccountService, AccountService, AttachmentService, CategoryService, CollectionService, GoalService, {provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true}],

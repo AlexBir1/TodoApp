@@ -5,7 +5,7 @@ import { IService } from "./service";
 import { GoalCategory } from "src/app/shared/models/goal-category.model";
 
 export interface IGoalService extends IService<GoalModel>{
-    getAllFiltered(collectionId: string, searchQuery: string): Observable<APIResponse<GoalModel[]>>;
+    getAllFiltered(collectionId: string, searchQuery: string, itemsPerPage: number, selectedPage: number): Observable<APIResponse<GoalModel[]>>;
     addToCategory(goalId: string, categoryId: string): Observable<APIResponse<GoalCategory>>;
     removeFromCategory(goalId: string, categoryId: string): Observable<APIResponse<GoalCategory>>;
 }

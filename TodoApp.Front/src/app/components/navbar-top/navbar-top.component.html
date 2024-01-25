@@ -1,15 +1,20 @@
-<div class="row p-3 justify-content-between align-items-center">
-    <div class="col-xl-1 col-lg-1 col-md-1 col-sm-1 col-1">
-      <button type="button" class="btn btn-primary px-3" (click)="onChangeIsNavbarShowing()"><i class="bi bi-list-ul" style="font-size:18px"></i></button>
+<nav class="row p-3 justify-content-between align-items-center">
+    <div class="col-xl-2 col-lg-2 col-md-2 col-sm-2 col-2">
+      <button type="button" class="btn btn-primary px-3" (click)="onChangeIsNavbarShowing()"><i class="material-icons md-24">format_list_bulleted</i></button>
     </div>
-    <div class="col-xl-7 col-lg-7 col-md-7 col-sm-7 col-7">
+    <div class="col-xl-5 col-lg-5 col-md-6 col-sm-7 col-8">
       <form class="input-group" [formGroup]="searchForm" (submit)="onSearchGoals()">
-        <span class="input-group-text">Search</span>
-        <input class="form-control" type="text" formControlName="query">
-        <button type="submit" class="btn btn-primary px-4"><i class="bi bi-search"></i></button>
+        <input class="form-control" type="text" formControlName="query" (input)="onEmptyValue()" placeholder="Goal`s title, description or category`s title">
+        <button type="submit" class="btn btn-primary px-3"><i class="material-icons md-24">search</i></button>
       </form>
     </div>
-    <div class="col-xl-1 col-lg-1 col-md-1 col-sm-1 col-1">
-      <button class="btn btn-success" (click)="onlogOut()"><i class="bi bi-door-open"></i> Log out</button>
+    <div class="col-xl-2 col-lg-2 col-md-2 col-sm-2 col-2">
+      <div class="d-flex justify-content-end gap-1">
+        <button id="menuBtn" class="btn btn-primary" (click)="onChangeMenuOpened()"><i class="material-icons md-24">apps</i></button>
+        <div id="btns" class="gap-1">
+          <button id="accountBtn" class="btn btn-primary"><i class="material-icons md-24">account_circle</i></button>
+          <button id="logOutBtn" class="btn btn-primary" (click)="onlogOut()"><i class="material-icons md-24">logout</i></button>
+        </div>
+      </div>
     </div>
-  </div>
+  </nav>

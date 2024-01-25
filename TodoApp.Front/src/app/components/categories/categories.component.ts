@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { CategoryService } from 'src/app/services/implementations/category.service';
 import { LocalStorageService } from 'src/app/services/local-storage.service';
@@ -16,6 +16,11 @@ export class CategoriesComponent implements OnInit{
   account!: AuthorizationModel;
 
   @Input() categories: CategoryModel[] = [];
+  @Output() enableLoadingState: EventEmitter<any> = new EventEmitter<any>();
+  @Output() disableLoadingState: EventEmitter<any> = new EventEmitter<any>();
+
+  @Output() errorResponseEvent: EventEmitter<string[]> = new EventEmitter<string[]>();
+  @Output() selectedCategoryEvent: EventEmitter<string> = new EventEmitter<string>();
 
   constructor(private categoryService: CategoryService, private localStorageService: LocalStorageService){}
 
@@ -30,6 +35,10 @@ export class CategoriesComponent implements OnInit{
     });
   }
 
+  selectCategory(categoryId: string){
+    this.selectedCategoryEvent.emit(categoryId);
+  }
+
   changeIsCreationMode(){
     this.isCreationMode = !this.isCreationMode;
     if(this.isCreationMode)
@@ -37,12 +46,16 @@ export class CategoriesComponent implements OnInit{
   }
 
   deleteCategory(id: string){
+    this.enableLoadingState.emit();
     this.categoryService.delete(id).subscribe({
       next: (result) => {
+        this.disableLoadingState.emit();
         if(result.isSuccess){
           let index = this.categories.findIndex(x=>x.id === id);
           this.categories.splice(index, 1);
         }
+        else
+          this.errorResponseEvent.emit(result.messages);
       },
       error: (error) => {
 
@@ -53,12 +66,16 @@ export class CategoriesComponent implements OnInit{
   createCategory(){
     let category: CategoryModel = this.categoryForm.value;
     category.accountId = this.account.accountId;
+    this.enableLoadingState.emit();
     this.categoryService.create(category).subscribe({
       next: (result) => {
+        this.disableLoadingState.emit();
         if(result.isSuccess){
           this.categories.push(result.data);
           this.isCreationMode = false;
         }
+        else
+          this.errorResponseEvent.emit(result.messages);
       },
       error: (error) => {
 

@@ -1,5 +1,5 @@
-<div class="card">
-    <div class="card-header">
+<ul class="list-group mb-2">
+    <li class="list-group-item">
         <div class="row justify-content-between">
             <div class="col-lg-6">
               <h5>My goal</h5>
@@ -7,14 +7,14 @@
             <div class="col-lg-6 text-end">
                 <button type="button" class="btn btn-primary px-4" (click)="closeDetails()"><i class="bi bi-arrow-return-left"></i></button>
             </div>
-          </div>
-    </div>
-    <form class="card-body" [formGroup]="goalForm">
+        </div>
+        <hr>
+    <form [formGroup]="goalForm" class="overflow-y-scroll" style="max-height: 67.5svh">
         <ul class="list-group mb-2">
             <li class="list-group-item d-flex align-items-center">
-                <div class="form-check form-switch">
-                    <input class="form-check-input" type="checkbox" id="flexSwitchCheckChecked" [checked]="goal?.isCompleted">
-                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" [checked]="goal!.isCompleted" (click)="onChangeGoalCompletion($event)">
+                  </div>
               <input class="form-control" formControlName="title">
             </li>
             <li class="list-group-item">
@@ -24,12 +24,12 @@
                 <input class="form-control" type="datetime-local" formControlName="startDate">
             </li>
             <li class="list-group-item d-flex p-2 flex-wrap">
-                <div class="card mb-2" (click)="changeIsAddingCategoryMode()" *ngIf="!isAddingCategoryMode">
+                <div class="card mb-2" style="width:100%" (click)="changeIsAddingCategoryMode()" *ngIf="!isAddingCategoryMode">
                     <div class="card-body">
                         <i class="bi bi-bookmark-plus"></i> Add to category
                     </div>
                   </div>
-                  <div class="card mb-2" *ngIf="isAddingCategoryMode">
+                  <div class="card mb-2" style="width:100%" *ngIf="isAddingCategoryMode">
                     <div class="card-body">
                         <div class="d-flex flex-wrap justify-content-between">
                             <label>Add to category</label>
@@ -46,31 +46,33 @@
                         </div>
                     </div>
                   </div>
-                  <div *ngIf="!isAddingCategoryMode">
+                  <div *ngIf="!isAddingCategoryMode" class="overflow-y-scroll" style="max-height: 15svh">
                     <div class="btn-group m-1" *ngFor="let category of goal!.goalCategories"> 
                         <button type="button" class="btn btn-outline-primary btn-sm p-2">
-                            <span class="px-3 py-1" style="border-radius: 9px; border: 1px solid black; margin-right: 5px;" [style.background-color]="category.category.colorHex"></span>
+                            <span class="px-2" style="border-radius: 20px; border: 1px solid black; margin-right: 5px;" [style.background-color]="category.category.colorHex"></span>
                             {{category.category.colorTitle}}
                         </button>
-                        <button type="button" class="btn btn-outline-danger btn-sm" (click)="selectCategoryToRemove(category)"><i class="bi bi-trash3"></i></button>
+                        <button type="button" class="btn btn-outline-danger btn-sm" (click)="selectCategoryToRemove(category)"><i class="material-icons md-18">delete_forever</i></button>
                     </div>
                 </div>
             </li>
             <li class="list-group-item">
-                <input class="form-control mb-2" type="file">
-                <div class="card mb-2">
-                    <div class="card-body">
-                        <div class="row justify-content-between">
-                            <div class="col-lg-8 d-flex align-items-center">
-                              <label>Coming soon</label>
-                            </div>
-                            <div class="col-lg-4 text-end">
-                                <div class="btn-group">
-                                    <button class="btn btn-danger px-2"><i class="bi bi-trash3"></i></button>
-                                    <button class="btn btn-success px-3"><i class="bi bi-download"></i></button>
+                <input class="form-control mb-2" type="file" (change)="onFileInputChange(goal!.id, $event)">
+                <div class="overflow-y-scroll px-2" style="max-height:17vh">
+                    <div class="card mb-2" *ngFor="let attachment of goal?.attachments">
+                        <div class="card-body">
+                            <div class="row justify-content-between align-items-lg-center">
+                                <div class="col-lg-8 col-md-12">
+                                {{attachment.filename}}
+                                </div>
+                                <div class="col-lg-4 col-md-12" style="height:fit-content">
+                                    <div class="btn-group">
+                                        <button class="btn btn-danger px-2" (click)="deleteFile(attachment.id)"><i class="material-icons md-18">delete_forever</i></button>
+                                        <button class="btn btn-success px-3" (click)="downloadFile(attachment.filename, attachment.id)"><i class="material-icons md-24">download</i></button>
+                                    </div>
                                 </div>
                             </div>
-                          </div>
+                        </div>
                     </div>
                 </div>
             </li>
@@ -81,11 +83,13 @@
                 <label>Updated at: {{goal?.updateDate | date: 'dd.MM.yyyy - hh:mm'}}</label>
             </li>
         </ul>
-        <div class="text-center">
-            <div class="btn-group">
-                <button type="button" class="btn btn-warning px-4" (click)="updateGoal()"><i class="bi bi-pencil-square"></i></button>
-                <button type="button" class="btn btn-danger px-4" (click)="deleteGoal(goal!.id)"><i class="bi bi-trash3"></i></button>
-            </div>
-        </div>
     </form>
-</div>
+    <hr>
+    <div class="text-center">
+        <div class="btn-group">
+            <button type="button" class="btn btn-warning px-4" (click)="updateGoal()"><i class="material-icons md-18">edit_note</i></button>
+            <button type="button" class="btn btn-danger px-4" (click)="deleteGoal(goal!.id)"><i class="material-icons md-24">delete_forever</i></button>
+        </div>
+    </div>
+</li>
+</ul>
