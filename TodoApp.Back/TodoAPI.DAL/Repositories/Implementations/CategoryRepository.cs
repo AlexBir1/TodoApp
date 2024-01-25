@@ -23,6 +23,7 @@ namespace TodoAPI.DAL.Repositories.Implementations
         public async Task<Category> CreateAsync(Category entity)
         {
             var result = await _context.Categories.AddAsync(entity);
+            await _context.SaveChangesAsync();
             return result.Entity;
         }
 
@@ -34,6 +35,7 @@ namespace TodoAPI.DAL.Repositories.Implementations
                 throw new Exception("No such category is found.");
 
             _context.Categories.Remove(category);
+            await _context.SaveChangesAsync();
 
             return category;
         }
@@ -60,6 +62,8 @@ namespace TodoAPI.DAL.Repositories.Implementations
             if (categories.Count == 0)
                 throw new Exception("No categories for now.");
 
+            int dbItemsCount = await _context.Goals.CountAsync();
+
             return categories;
         }
 
@@ -81,6 +85,7 @@ namespace TodoAPI.DAL.Repositories.Implementations
             entity.Id = Guid.Parse(id);
 
             var result = _context.Update(entity);
+            await _context.SaveChangesAsync();
 
             return result.Entity;
         }

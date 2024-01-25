@@ -19,6 +19,7 @@ namespace TodoAPI.DAL.Repositories.Implementations
         public async Task<Collection> CreateAsync(Collection entity)
         {
             var result = await _context.Collections.AddAsync(entity);
+            await _context.SaveChangesAsync();
             return result.Entity;
         }
 
@@ -34,6 +35,7 @@ namespace TodoAPI.DAL.Repositories.Implementations
                 
 
             _context.Collections.Remove(collection);
+            await _context.SaveChangesAsync();
 
             return collection;
         }
@@ -73,6 +75,7 @@ namespace TodoAPI.DAL.Repositories.Implementations
             entity.Id = Guid.Parse(id);
 
             var result = _context.Collections.Update(entity);
+            await _context.SaveChangesAsync();
 
             return result.Entity;
         }

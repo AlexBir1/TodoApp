@@ -4,7 +4,7 @@ namespace TodoAPI.DAL.Entities
 {
     public class Attachment
     {
-        public Guid Id { get; set; }
+        public Guid Id { get; set; } = Guid.NewGuid();
         public string Filename { get; set; } = string.Empty;
         public string Extension { get; set; } = string.Empty;
         public string ContentType { get; set; } = string.Empty;

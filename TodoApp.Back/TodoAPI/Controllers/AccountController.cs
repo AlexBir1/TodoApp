@@ -1,6 +1,10 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using MediatR;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using TodoAPI.APIResponse.Interfaces;
+using TodoAPI.CQRS.Commands.Account;
+using TodoAPI.CQRS.Queries.Account;
 using TodoAPI.Filters;
 using TodoAPI.Services.Interfaces;
 using TodoAPI.Shared.Models;
@@ -11,26 +15,26 @@ namespace TodoAPI.Controllers
     [ApiController]
     public class AccountController : ControllerBase
     {
-        private readonly IServiceRepository _serviceRepo;
+        private readonly IMediator _mediator;
 
-        public AccountController(IServiceRepository serviceRepo)
+        public AccountController(IMediator mediator)
         {
-            _serviceRepo = serviceRepo;
+            _mediator = mediator;
         }
 
         [ValidationFilter]
         [HttpPost("SignUp")]
-        public async Task<ActionResult<IAPIResponse<AuthorizationModel>>> SignUpAsync([FromBody] SignUpModel model) => Ok(await _serviceRepo.AccountService.SignUpAsync(model));
+        public async Task<ActionResult<IAPIResponse<AuthorizationModel>>> SignUpAsync([FromBody] SignUpModel model) => Ok(await _mediator.Send(new SignUpAccountCommand(model)));
 
         [ValidationFilter]
         [HttpPost("SignIn")]
-        public async Task<ActionResult<IAPIResponse<AuthorizationModel>>> SignInAsync([FromBody] SignInModel model) => Ok(await _serviceRepo.AccountService.SignInAsync(model));
+        public async Task<ActionResult<IAPIResponse<AuthorizationModel>>> SignInAsync([FromBody] SignInModel model) => Ok(await _mediator.Send(new SignInAccountCommand(model)));
 
         [ValidationFilter]
         [HttpGet("{id}")]
-        public async Task<ActionResult<IAPIResponse<AccountModel>>> GetByIdAsync([FromBody] string id) => Ok(await _serviceRepo.AccountService.GetByIdAsync(id));
+        public async Task<ActionResult<IAPIResponse<AccountModel>>> GetByIdAsync([FromBody] string id) => Ok(await _mediator.Send(new GetAccountByIdQuery(id)));
 
         [HttpPut("RefreshAuthToken")]
-        public async Task<ActionResult<IAPIResponse<AuthorizationModel>>> RefreshTokenAsync([FromBody] AuthorizationModel model) => Ok(await _serviceRepo.AccountService.RefreshTokenAsync(model));
+        public async Task<ActionResult<IAPIResponse<AuthorizationModel>>> RefreshTokenAsync([FromBody] AuthorizationModel model) => Ok(await _mediator.Send(new RefreshTokenAccountCommand(model)));
     }
 }

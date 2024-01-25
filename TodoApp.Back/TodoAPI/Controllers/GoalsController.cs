@@ -1,11 +1,19 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Hangfire;
+using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
+using System.Security.Claims;
 using TodoAPI.APIResponse.Interfaces;
+using TodoAPI.CQRS.Commands;
+using TodoAPI.CQRS.Commands.Goals;
+using TodoAPI.CQRS.Queries;
+using TodoAPI.CQRS.Queries.Goals;
 using TodoAPI.DAL.Entities;
 using TodoAPI.Filters;
+using TodoAPI.Hubs;
 using TodoAPI.Services.Interfaces;
-using TodoAPI.Services.UOW;
 using TodoAPI.Shared.Models;
 
 namespace TodoAPI.Controllers
@@ -15,43 +23,53 @@ namespace TodoAPI.Controllers
     [Authorize]
     public class GoalsController : ControllerBase
     {
-        private readonly IServiceRepository _serviceRepo;
+        private readonly IHubContext<NotificationHub> _notifier;
+        private readonly IMediator _mediator;
 
-        public GoalsController(IServiceRepository serviceRepo)
+        public GoalsController(IHubContext<NotificationHub> notifier, IMediator mediator)
         {
-            _serviceRepo = serviceRepo;
+            _notifier = notifier;
+            _mediator = mediator;
         }
 
         [HttpPatch("{id}/AddToCategory/{selectedCategoryId}")]
-        public async Task<ActionResult<IAPIResponse<CategoryGoal>>> AddToCategory(string id, string selectedCategoryId) => Ok(await _serviceRepo.GoalService.AddToCategory(id, selectedCategoryId));
+        public async Task<ActionResult<IAPIResponse<CategoryGoal>>> AddToCategory(string id, string selectedCategoryId) => Ok(await _mediator.Send(new AddGoalToCategoryCommand(id, selectedCategoryId)));
 
         [HttpPatch("{id}/RemoveFromCategory/{selectedCategoryId}")]
-        public async Task<ActionResult<IAPIResponse<CategoryGoal>>> RemoveFromCategory(string id, string selectedCategoryId) => Ok(await _serviceRepo.GoalService.RemoveFromCategory(id, selectedCategoryId));
+        public async Task<ActionResult<IAPIResponse<CategoryGoal>>> RemoveFromCategory(string id, string selectedCategoryId) => Ok(await _mediator.Send(new RemoveGoalFromCategoryCommand(id, selectedCategoryId)));
 
         [ValidationFilter]
         [HttpPost]
-        public async Task<ActionResult<IAPIResponse<Goal>>> CreateAsync(GoalModel model) => Ok(await _serviceRepo.GoalService.CreateAsync(model));
+        public async Task<ActionResult<IAPIResponse<Goal>>> CreateAsync(GoalModel model)
+        {
+            var result = await _mediator.Send(new CreateGoalCommand(model));
+            if (result.IsSuccess)
+                await _notifier.Clients.User(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier)).SendAsync("Notify", "Goal is successfully created");
+            return Ok(result);
+        }
 
         [ValidationFilter]
         [HttpPut("{id}")]
-        public async Task<ActionResult<IAPIResponse<Goal>>> UpdateAsync(string id, GoalModel model) => Ok(await _serviceRepo.GoalService.UpdateAsync(id, model));
-
-        [HttpGet("{id}")]
-        public async Task<ActionResult<IAPIResponse<Goal>>> GetByIdAsync(string id) => Ok(await _serviceRepo.GoalService.GetByIdAsync(id));
+        public async Task<ActionResult<IAPIResponse<Goal>>> UpdateAsync(string id, GoalModel model) 
+        {
+            var result = await _mediator.Send(new UpdateGoalCommand(id, model));
+            if (result.IsSuccess)
+                await _notifier.Clients.User(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier)).SendAsync("Notify", "Goal is successfully updated");
+            return Ok(result);
+        }
 
         [HttpDelete("{id}")]
-        public async Task<ActionResult<IAPIResponse<Goal>>> DeleteAsync(string id) => Ok(await _serviceRepo.GoalService.DeleteAsync(id));
+        public async Task<ActionResult<IAPIResponse<Goal>>> DeleteAsync(string id)
+        {
+            var result = await _mediator.Send(new DeleteGoalCommand(id));
+            if(result.IsSuccess)
+                await _notifier.Clients.User(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier)).SendAsync("Notify", "Goal is successfully deleted");
+            return Ok(result); 
+        }
 
         [HttpGet]
-        public async Task<ActionResult<IAPIResponse<IEnumerable<Goal>>>> GetAllAsync([FromQuery] string collectionId = "", [FromQuery] string searchQuery = "")
-        {
-            if(!string.IsNullOrEmpty(searchQuery))
-                return Ok(await _serviceRepo.GoalService.GetAllAsync(x => x.Title.Contains(searchQuery) || x.Description.Contains(searchQuery) || x.GoalCategories.Any(x=>x.Category.ColorTitle.Contains(searchQuery))));
-
-            if (string.IsNullOrEmpty(collectionId))
-                return Ok(await _serviceRepo.GoalService.GetAllAsync());
-            else
-                return Ok(await _serviceRepo.GoalService.GetAllAsync(x => x.CollectionId == Guid.Parse(collectionId)));
-        }
+        public async Task<ActionResult<IAPIResponse<IEnumerable<Goal>>>> GetAllAsync
+            ([FromQuery] string collectionId = "", [FromQuery] string searchQuery = "", [FromQuery] int itemsPerPage = 1, [FromQuery] int selectedPage = 1)
+                => Ok(await _mediator.Send(new GetGoalListByCollectionIdPagedQuery(collectionId, searchQuery, selectedPage, itemsPerPage)));
     }
 }

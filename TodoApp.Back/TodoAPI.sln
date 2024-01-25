@@ -3,17 +3,17 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.6.33927.249
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TodoAPI", "TodoAPI\TodoAPI.csproj", "{65414772-7712-4F48-9C99-E392DBD1E4E2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TodoAPI", "TodoAPI\TodoAPI.csproj", "{65414772-7712-4F48-9C99-E392DBD1E4E2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TodoAPI.Shared", "TodoAPI.Shared\TodoAPI.Shared.csproj", "{6FA9D078-2CA4-4A14-9385-D942F3CF2682}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TodoAPI.Shared", "TodoAPI.Shared\TodoAPI.Shared.csproj", "{6FA9D078-2CA4-4A14-9385-D942F3CF2682}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TodoAPI.DAL", "TodoAPI.DAL\TodoAPI.DAL.csproj", "{9B8217CD-D81D-4454-8643-631C621CE370}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TodoAPI.DAL", "TodoAPI.DAL\TodoAPI.DAL.csproj", "{9B8217CD-D81D-4454-8643-631C621CE370}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TodoAPI.Services", "TodoAPI.Services\TodoAPI.Services.csproj", "{E5A12E13-9D7C-43D3-B747-17934614FA69}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TodoAPI.Services", "TodoAPI.Services\TodoAPI.Services.csproj", "{E5A12E13-9D7C-43D3-B747-17934614FA69}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TodoAPI.APIResponse", "TodoAPI.APIResponse\TodoAPI.APIResponse.csproj", "{47220A72-CBCD-463A-817C-9EE5463B1F3B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TodoAPI.APIResponse", "TodoAPI.APIResponse\TodoAPI.APIResponse.csproj", "{47220A72-CBCD-463A-817C-9EE5463B1F3B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TodoAPI.XUnit", "TodoAPI.XUnit\TodoAPI.XUnit.csproj", "{C409A9DB-7957-4433-93DE-49771645B1A5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TodoAPI.XUnit", "TodoAPI.XUnit\TodoAPI.XUnit.csproj", "{C409A9DB-7957-4433-93DE-49771645B1A5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

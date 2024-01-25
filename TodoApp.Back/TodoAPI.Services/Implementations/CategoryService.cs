@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using TodoAPI.APIResponse.Implementations;
 using TodoAPI.APIResponse.Interfaces;
 using TodoAPI.DAL.Entities;
-using TodoAPI.DAL.UOW.Interfaces;
+using TodoAPI.DAL.Repositories.Interfaces;
 using TodoAPI.Services.Interfaces;
 using TodoAPI.Shared.Models;
 
@@ -16,46 +16,47 @@ namespace TodoAPI.Services.Implementations
 {
     public class CategoryService : ICategoryService
     {
-        private readonly IDBRepository _dbRepo;
+        private readonly ICategoryRepository _categoryRepo;
         private readonly IMapper _mapper;
 
-        public CategoryService(IDBRepository dbRepo, IMapper mapper)
+        public CategoryService(IMapper mapper, ICategoryRepository categoryRepo)
         {
-            _dbRepo = dbRepo;
             _mapper = mapper;
+            _categoryRepo = categoryRepo;
         }
 
         public async Task<IAPIResponse<Category>> CreateAsync(CategoryModel model)
         {
-            var result = await _dbRepo.CategoryRepo.CreateAsync(_mapper.Map<Category>(model));
-            await _dbRepo.CommitAsync();
+            var result = await _categoryRepo.CreateAsync(_mapper.Map<Category>(model));
             return new APIResponse<Category>(true, result);
         }
 
         public async Task<IAPIResponse<Category>> DeleteAsync(string id)
         {
-            var result = await _dbRepo.CategoryRepo.DeleteAsync(id);
-            await _dbRepo.CommitAsync();
+            var result = await _categoryRepo.DeleteAsync(id);
             return new APIResponse<Category>(true, result);
         }
 
         public async Task<IAPIResponse<IEnumerable<Category>>> GetAllAsync(Expression<Func<Category, bool>> expression = null)
         {
             if (expression != null)
-                return new APIResponse<IEnumerable<Category>>(true, await _dbRepo.CategoryRepo.GetAllAsync(expression));
+            {
+                return new APIResponse<IEnumerable<Category>>(true, await _categoryRepo.GetAllAsync(expression));
+            }
             else
-                return new APIResponse<IEnumerable<Category>>(true, await _dbRepo.CategoryRepo.GetAllAsync());
+            {
+                return new APIResponse<IEnumerable<Category>>(true, await _categoryRepo.GetAllAsync());
+            } 
         }
 
         public async Task<IAPIResponse<Category>> GetByIdAsync(string id)
         {
-            return new APIResponse<Category>(true, await _dbRepo.CategoryRepo.GetByIdAsync(id));
+            return new APIResponse<Category>(true, await _categoryRepo.GetByIdAsync(id));
         }
 
         public async Task<IAPIResponse<Category>> UpdateAsync(string id, CategoryModel model)
         {
-            var result = await _dbRepo.CategoryRepo.UpdateAsync(id, _mapper.Map<Category>(model));
-            await _dbRepo.CommitAsync();
+            var result = await _categoryRepo.UpdateAsync(id, _mapper.Map<Category>(model));
             return new APIResponse<Category>(true, result);
         }
     }

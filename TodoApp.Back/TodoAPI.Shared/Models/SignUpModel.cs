@@ -9,10 +9,14 @@ namespace TodoAPI.Shared.Models
 {
     public class SignUpModel
     {
+        [Required(ErrorMessage = "Username is required")]
         public string Username { get; set; } = string.Empty;
 
+        [Required(ErrorMessage = "Email is required")]
+        [EmailAddress(ErrorMessage = "Invalid email format")]
         public string Email { get; set; } = string.Empty;
 
+        [Required(ErrorMessage = "Phone number is required")]
         public string PhoneNumber { get; set; } = string.Empty;
 
         [MinLength(8, ErrorMessage = "Minimum password characters: 8")]
