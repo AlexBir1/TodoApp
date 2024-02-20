@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { CollectionService } from 'src/app/services/implementations/collection.service';
 import { LocalStorageService } from 'src/app/services/local-storage.service';
@@ -18,6 +18,7 @@ export class CollectionsComponent implements OnInit{
   @Input() collections: CollectionModel[] = [];
   collectionsExceptUnsorted: CollectionModel[] = [];
   @Output() selectedCollectionEvent: EventEmitter<CollectionModel> = new EventEmitter<CollectionModel>();
+  @Output() createdCollectionEvent: EventEmitter<CollectionModel> = new EventEmitter<CollectionModel>();
   @Output() deletedCollectionEvent: EventEmitter<CollectionModel> = new EventEmitter<CollectionModel>();
 
   @Output() enableLoadingState: EventEmitter<any> = new EventEmitter<any>();
@@ -44,12 +45,12 @@ export class CollectionsComponent implements OnInit{
   }
 
   setCollectionsExceptUnsorted(){
-    let newCollections: CollectionModel[] = [];
-    this.collections.forEach(x=>newCollections.push(x));
-    let index = newCollections.findIndex(x=>x.title === 'Unsorted');
-    if(index > -1)
-      newCollections.splice(index, 1);
-    this.collectionsExceptUnsorted = newCollections;
+    this.collectionsExceptUnsorted = [];
+    this.collections.forEach(x=>
+      {
+        if(x.title != 'Unsorted') 
+          this.collectionsExceptUnsorted.push(x)
+      });
   }
 
   deleteCollection(id: string, event: MouseEvent){
@@ -60,20 +61,19 @@ export class CollectionsComponent implements OnInit{
       return console.log('This collection cannot be deleted.');
     this.collectionService.delete(id).subscribe({
       next: (result) => {
-        this.disableLoadingState.emit();
         if(result.isSuccess){
           let index = this.collections.findIndex(x=>x.id === id);
-          this.collections.splice(index, 1);
+          this.collections.splice(index,1);
+          this.setCollectionsExceptUnsorted();
           this.deletedCollectionEvent.emit(result.data);
         }
         else
           this.errorResponseEvent.emit(result.messages);
       },
       error: (error) => {
-        this.disableLoadingState.emit();
         console.log(error);
       }
-    });
+    }).add(() => this.disableLoadingState.emit());
   }
 
   createCollection(){
@@ -82,19 +82,19 @@ export class CollectionsComponent implements OnInit{
     this.enableLoadingState.emit();
     this.collectionService.create(collection).subscribe({
       next: (result) => {
-        this.disableLoadingState.emit();
         if(result.isSuccess){
-          this.collections.push(result.data);
+          let newCollection = result.data;
+          this.collections.push(newCollection);
+          this.setCollectionsExceptUnsorted();
           this.isCreationMode = false;
         }
         else
           this.errorResponseEvent.emit(result.messages);
       },
       error: (error) => {
-        this.disableLoadingState.emit();
         console.log(error);
       }
-    });
+    }).add(() => this.disableLoadingState.emit());
   }
 
   selectCollection(id: string){
@@ -103,7 +103,7 @@ export class CollectionsComponent implements OnInit{
 
   initializeCollectionForm(){
     this.collectionForm = new FormGroup({
-      title: new FormControl('', Validators.required),
+      title: new FormControl(null, Validators.required),
     });
   }
 }

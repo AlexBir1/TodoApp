@@ -1,13 +1,15 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { UserNotificationModel } from 'src/app/shared/models/user-notification.model';
 
 @Component({
-  selector: 'app-notification',
-  templateUrl: './notification.component.html',
-  styleUrls: ['./notification.component.css']
+  selector: 'app-goal-notification',
+  templateUrl: './goal-notification.component.html',
+  styleUrls: ['./goal-notification.component.css']
 })
-export class NotificationComponent {
-  @Input() message: string | null = '';
+export class GoalNotificationComponent {
+  @Input() notification: UserNotificationModel | null = null;
   @Output() closedEvent: EventEmitter<any> = new EventEmitter<any>();
+  @Output() showGoalByIdEvent: EventEmitter<string> = new EventEmitter<string>();
 
   lifeTimeSecs: number = 4;
   timeoutSecs!: any;
@@ -45,5 +47,14 @@ export class NotificationComponent {
 
   close(){
     this.closedEvent.emit();
+  }
+
+  closeByButton(event: MouseEvent){
+    event.stopPropagation();
+    this.closedEvent.emit();
+  }
+
+  showGoalById(){
+    this.showGoalByIdEvent.emit(this.notification?.goalId);
   }
 }

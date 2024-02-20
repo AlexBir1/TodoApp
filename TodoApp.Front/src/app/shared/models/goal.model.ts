@@ -1,4 +1,5 @@
 import { AttachmentModel } from "./attachment.model";
+import { CollectionModel } from "./collection.model";
 import { GoalCategory } from "./goal-category.model";
 
 export interface GoalModel{
@@ -8,6 +9,7 @@ export interface GoalModel{
     isCompleted: boolean;
     startDate: Date;
     collectionId: string;
+    collection: CollectionModel;
 
     creationDate: Date;
     updateDate: Date;

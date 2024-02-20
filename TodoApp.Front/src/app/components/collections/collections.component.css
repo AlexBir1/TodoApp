@@ -1,8 +1,12 @@
 .card{
+    background-color: rgba(197, 197, 197, 0.2);
+}
+
+.changable-background-onhover{
     width:100%;
     background-color: rgba(197, 197, 197, 0.2);
 }
 
-.card:hover{
-    background-color: rgba(255, 255, 255, 0.26);
+.changable-background-onhover:hover{
+    background-color: rgba(255, 255, 255);
 }

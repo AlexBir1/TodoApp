@@ -1,0 +1,21 @@
+.col-lg-9 {
+    flex-grow: 1;
+    flex-shrink: 1;
+    transition: all 400ms ease;
+  }
+  .col-lg-8 {
+    flex-grow: 1;
+    flex-shrink: 1;
+    transition: all 400ms ease;
+  }
+
+  .col-lg-4 {
+    flex-grow: 1;
+    flex-shrink: 1;
+    transition: all 400ms ease;
+  }
+  .col-lg-3 {
+    flex-grow: 1;
+    flex-shrink: 1;
+    transition: all 400ms ease;
+  }

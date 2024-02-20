@@ -4,22 +4,22 @@
     <li class="list-group-item">
         <h5>Collections</h5>
         <hr>
-        <div class="overflow-y-scroll mb-2 px-2" style="max-height:27.5svh; " *ngIf="!isCreationMode">
-          <div class="card mb-2" style="cursor: pointer;" (click)="selectCollection(getUnsortedCollectionId())">
+        <div class="overflow-y-scroll mb-2 px-2" style="max-height:27.5svh;" *ngIf="!isCreationMode">
+          <div class="card changable-background-onhover mb-2" style="cursor: pointer;" (click)="selectCollection(getUnsortedCollectionId())">
             <div class="card-body d-flex justify-content-between">
                 <h5>Unsorted</h5>
             </div>
           </div>
-          <div class="card mb-2" style="cursor: pointer;" *ngFor="let collection of collectionsExceptUnsorted" (click)="selectCollection(collection.id)">
-            <div class="card-body d-flex justify-content-between">
-                <h5>{{collection.title}}</h5>
-                <button type="button" class="btn btn-danger" *ngIf="collection.title != 'Unsorted'"><i class="bi bi-trash3" (click)="deleteCollection(collection.id, $event)"></i></button>
+          <div class="card changable-background-onhover mb-2" style="cursor: pointer;" *ngFor="let c of collectionsExceptUnsorted">
+            <div class="card-body d-flex justify-content-between" (click)="selectCollection(c.id)">
+                <h5>{{c.title}}</h5>
+                <button type="button" class="btn btn-danger" *ngIf="c.title != 'Unsorted'"><i class="bi bi-trash3" (click)="deleteCollection(c.id, $event)"></i></button>
             </div>
           </div>
         </div>
-          <div class="card mb-2" *ngIf="!isCreationMode" style="cursor: pointer;" (click)="changeIsCreationMode()">
-            <div class="card-body">
-                <i class="bi bi-plus-lg"></i> Create new collection
+          <div class="card changable-background-onhover mb-2" *ngIf="!isCreationMode" style="cursor: pointer;" (click)="changeIsCreationMode()">
+            <div class="card-body d-flex align-items-center">
+              <i class="material-icons md-24">add</i> Create new collection
             </div>
           </div>
           <div class="card mb-2" *ngIf="isCreationMode">
@@ -29,14 +29,14 @@
                       <h5>New collection</h5>
                     </div>
                     <div class="col-lg-6 text-end">
-                        <button type="button" class="btn btn-danger px-4"><i class="bi bi-x-lg" (click)="changeIsCreationMode()"></i></button>
+                        <button type="button" class="btn btn-danger px-3" (click)="changeIsCreationMode()"><i class="bi bi-x-lg"></i></button>
                     </div>
                   </div>
                   <hr>
                   <form class="input-group" [formGroup]="collectionForm" (submit)="createCollection()">
                     <span class="input-group-text">Title</span>
                     <input class="form-control" formControlName="title">
-                    <button class="btn btn-success px-4"><i class="bi bi-plus-square"></i></button>
+                    <button *ngIf="collectionForm.valid" class="btn btn-success px-3"><i class="bi bi-plus-square"></i></button>
                   </form>
             </div>
           </div>

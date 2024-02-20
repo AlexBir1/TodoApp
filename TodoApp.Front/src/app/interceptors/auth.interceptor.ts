@@ -8,44 +8,42 @@ import { AuthorizationModel } from "../shared/models/authorization.model";
 import { makeHeaderWithAuthorization } from "../utilities/make-jwt-header";
 
 @Injectable()
-export class AuthInterceptor implements HttpInterceptor{
-    constructor(private localStorage: LocalStorageService, private accountService: AccountService, private authAccountService: AuthorizedAccountService){}
+export class AuthInterceptor implements HttpInterceptor {
+    constructor(private localStorage: LocalStorageService, private accountService: AccountService, private authAccountService: AuthorizedAccountService) { }
 
     intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
-        var account = this.localStorage.getAccountFromStorage();
-
-        if(req.url.includes("RefreshAuthToken") && req.method === "PUT")
+        let account = this.localStorage.getAccountFromStorage();
+        if (!account)
             return next.handle(req);
 
-        if(account){
-            if(account.keepAuthorized){
-                if(!this.validateToken(account)){
-                    this.accountService.refreshAuthToken(account).subscribe({
-                        next: (r) => {
-                            if(r.isSuccess){
-                                this.localStorage.addAccountToStorage(r.data);
-                                this.authAccountService.addAccount(r.data);
-                            }
-                        },
-                        error: (e) =>{
+        if (!this.validateToken(account)) {
+            if (account.keepAuthorized) {
+                this.accountService.refreshAuthToken(account).subscribe({
+                    next: (r) => {
+                        if (r.isSuccess) {
+                            this.localStorage.addAccountToStorage(r.data);
+                            this.authAccountService.addAccount(r.data);
                         }
-                    });
-                }
+                    }
+                });
             }
-            else{
+            else {
                 this.localStorage.removeAccountFromStorage();
                 this.authAccountService.removeAccount();
             }
-            return next.handle(req.clone({headers: makeHeaderWithAuthorization(account.token)}));
         }
-        return next.handle(req);
+
+        return next.handle(req.clone({ headers: makeHeaderWithAuthorization(account.token) }));
     }
 
-    validateToken(model: AuthorizationModel): boolean{
-        var date = Date.now();
-        var expirationDate = new Date(model.tokenExpirationDate).getTime();
-        if(date > expirationDate) 
+    validateToken(model: AuthorizationModel): boolean {
+        let date = Date.now();
+        let expirationDate = new Date(model.tokenExpirationDate).getTime();
+
+        if (date > expirationDate) {
             return false;
-        return true
+        }
+
+        return true;
     }
 }

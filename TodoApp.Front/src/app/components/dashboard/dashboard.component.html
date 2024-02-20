@@ -13,18 +13,20 @@
       [class.justify-content-start]="(!isNavbarShowing && selectedGoal)"
       [class.justify-content-center]="(isNavbarShowing && selectedGoal)"
       >
-          <div class="col-xl-3 col-lg-4 col-md-4 col-12 p-3 position-fixed" *ngIf="isNavbarShowing" style="background-color:rgb(226, 226, 226); border-right: 2px solid rgba(197, 189, 189, 0.521); left:0; height:100%; z-index:47">
+          <div class="col-xl-3 col-lg-4 col-md-12 col-12 p-3 position-fixed" *ngIf="isNavbarShowing" [@fadeInOutLeft]  style="background-color:rgb(226, 226, 226); border-right: 2px solid rgba(197, 189, 189, 0.521); left:0; height:100%; z-index:47">
             <app-categories [categories]="categories" 
             (errorResponseEvent)="setResponseErrors($event)"
             (selectedCategoryEvent)="onChangedSelectedCategory($event)"
+            (deletedCategoryEvent)="updateGoalsCategoriesAfterDelete($event)"
             >
           </app-categories>
             <app-collections 
               [collections]="collections" 
-              (selectedCollectionEvent)="getAllGoalsInCollection($event)" 
+              (selectedCollectionEvent)="getAllGoalsInCollection($event)"
+              (createdCollectionEvent)="onCreatedCollection($event)"
               (deletedCollectionEvent)="setDefaultCollectionAfterDelete($event)"
-              (enableLoadingState)="onEnableLoadingState()"
-              (disableLoadingState)="onDisableLoadingState()"
+              (enableLoadingState)="enableLoadingState"
+              (disableLoadingState)="disableLoadingState"
               (errorResponseEvent)="setResponseErrors($event)"
               >
             </app-collections>
@@ -33,7 +35,6 @@
           [class.col-lg-12]="!isNavbarShowing && !selectedGoal" 
           [class.col-lg-4]="isNavbarShowing && selectedGoal != null" 
           [class.col-xl-6]="isNavbarShowing && selectedGoal != null" 
-          [class.col-md-4]="isNavbarShowing && selectedGoal != null" 
           [class.col-lg-8]="(isNavbarShowing && !selectedGoal) || (!isNavbarShowing && selectedGoal)"
           [class.col-md-8]="(isNavbarShowing && !selectedGoal) || (!isNavbarShowing && selectedGoal)"
           [class.col-xl-9]="(isNavbarShowing && !selectedGoal) || (!isNavbarShowing && selectedGoal)"
@@ -45,23 +46,23 @@
               [collections]="collections"
               [categories]="categories" 
               (selectedGoalEvent)="setSelectedGoal($event)" 
-              (deletedGoalEvent)="removeSelectedGoal()"
+              (deletedGoalEvent)="onDeletedGoal()"
               (updatedGoalEvent)="onUpdatedGoal($event)"
               (changedSelectedCategoryEvent)="onChangedSelectedCategory($event)"
               (pageChangedEvent)="onGoalsPageChanged($event)"
               (errorResponseEvent)="setResponseErrors($event)"
               [pageParams]="pageParams"
-              (enableLoadingState)="onEnableLoadingState()"
-              (disableLoadingState)="onDisableLoadingState()"
+              (enableLoadingState)="enableLoadingState"
+              (disableLoadingState)="disableLoadingState"
               >
             </app-goals>
           </div>
-          <div *ngIf="selectedGoal" class="col-xl-3 col-lg-4 col-md-4 p-3 col-12 position-fixed" style="background-color:rgb(226, 226, 226); border-left: 2px solid rgba(197, 189, 189, 0.521); z-index:46; right:0; height:100%"> 
+          <div *ngIf="selectedGoal" [@fadeInOutRight] class="col-xl-3 col-lg-4 col-md-12 p-3 col-12 position-fixed" style="background-color:rgb(226, 226, 226); border-left: 2px solid rgba(197, 189, 189, 0.521); z-index:46; right:0; height:100%"> 
             <app-goal-details 
               [goal]="selectedGoal" 
               [categories]="categories"
               (closedGoalDetailsEvent)="removeSelectedGoal()" 
-              (deletedGoalEvent)="removeSelectedGoal()"
+              (deletedGoalEvent)="onDeletedGoal()"
               (addedToCategoryEvent)="onGoalAddedToCategory($event)"
               (removedFromCategoryEvent)="onGoalRemovedFromCategory($event)"
               (updatedGoalEvent)="onUpdatedGoal($event)"
@@ -71,12 +72,13 @@
           </div>
       </div>
     </div>
-  <div class="position-fixed" style="bottom: 5px; right:20px; width:100%; z-index: 100" >
+  <div class="position-absolute" style="bottom: 5px; width:50%; right:20px; z-index: 100" >
     <div class="container-fluid">
       <div class="row justify-content-end">
-        <div class="col-lg-3">
+        <div class="col-lg-6">
           <app-notification *ngIf="message" [message]="message" (closedEvent)="onClosedNotification()"></app-notification>
           <app-error *ngIf="responseErrors" [errors]="responseErrors" (closedEvent)="onClosedError()"></app-error>
+          <app-goal-notification *ngIf="goalNotification" [notification]="goalNotification" (closedEvent)="onClosedGoalNotification()" (showGoalByIdEvent)="setSelectedGoalFromNotification($event)"></app-goal-notification>
         </div>
       </div>
     </div>

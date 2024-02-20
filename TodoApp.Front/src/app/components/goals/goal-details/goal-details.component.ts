@@ -2,6 +2,7 @@ import { Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChange
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { AttachmentService } from 'src/app/services/implementations/attachment.service';
 import { CategoryService } from 'src/app/services/implementations/category.service';
+import { GoalNotificationsService } from 'src/app/services/implementations/goal-notifications.service';
 import { GoalService } from 'src/app/services/implementations/goal.service';
 import { CategoryModel } from 'src/app/shared/models/category.model';
 import { GoalCategory } from 'src/app/shared/models/goal-category.model';
@@ -24,11 +25,14 @@ export class GoalDetailsComponent implements OnInit, OnChanges{
 
   @Output() errorResponseEvent: EventEmitter<string[]> = new EventEmitter<string[]>();
 
+  @Output() enableLoadingState: EventEmitter<any> = new EventEmitter<any>();
+  @Output() disableLoadingState: EventEmitter<any> = new EventEmitter<any>();
+
   goalForm!: FormGroup;
   isAddingCategoryMode: boolean = false;
 
 
-  constructor(private goalService: GoalService, private attachmentService: AttachmentService){
+  constructor(private goalService: GoalService, private attachmentService: AttachmentService, private goalNotificationsService: GoalNotificationsService){
   }
   ngOnChanges(changes: SimpleChanges): void {
     this.initializeGoalForm();
@@ -39,6 +43,7 @@ export class GoalDetailsComponent implements OnInit, OnChanges{
   }
 
   onFileInputChange(goalId: string, event: any){
+    this.enableLoadingState.emit()
     let file = event?.target?.files[0] as File; 
     this.attachmentService.create(goalId, file).subscribe({
       next: (result) => {
@@ -51,10 +56,11 @@ export class GoalDetailsComponent implements OnInit, OnChanges{
       error: (error) => {
 
       }
-    });
+    }).add(() => this.disableLoadingState.emit());
   }
 
   downloadFile(filename: string, fileId: string){
+    this.enableLoadingState.emit()
     this.attachmentService.save(fileId).subscribe({
       next: (result) => {
         if(result){
@@ -70,10 +76,11 @@ export class GoalDetailsComponent implements OnInit, OnChanges{
           document.body.removeChild(a);
         }
       }
-    })
+    }).add(() => this.disableLoadingState.emit());
   }
 
   deleteFile(fileId: string){
+    this.enableLoadingState.emit()
     this.attachmentService.delete(fileId).subscribe({
       next: (result) => {
         if(result.isSuccess){
@@ -86,11 +93,12 @@ export class GoalDetailsComponent implements OnInit, OnChanges{
       error: (error) => {
 
       }
-    });
+    }).add(() => this.disableLoadingState.emit());
   }
 
   onChangeGoalCompletion(sender: any){
     this.goal!.isCompleted = sender.target.checked;
+    this.enableLoadingState.emit()
     this.goalService.update(this.goal!.id, this.goal!).subscribe({
       next: (result) => {
         if(result.isSuccess){
@@ -103,16 +111,20 @@ export class GoalDetailsComponent implements OnInit, OnChanges{
       error: (error) => {
 
       }
-    });
+    }).add(() => this.disableLoadingState.emit());
   }
 
 
   updateGoal(){
-    let newGoal = this.goalForm.value;
+    let newGoal: GoalModel = this.goalForm.value;
+    newGoal.creationDate = this.goal!.creationDate;
+    newGoal.collection = this.goal!.collection;
+    this.enableLoadingState.emit()
     this.goalService.update(newGoal.id, newGoal).subscribe({
       next: (result) => {
         if(result.isSuccess){
           this.goal = result.data;
+          this.goalNotificationsService.update(result.data.id, result.data).subscribe();
           this.updatedGoalEvent.emit(result.data);
         }
         else
@@ -121,7 +133,7 @@ export class GoalDetailsComponent implements OnInit, OnChanges{
       error: (error) => {
 
       }
-    });
+    }).add(() => this.disableLoadingState.emit());
   }
 
   changeIsAddingCategoryMode(){
@@ -130,6 +142,7 @@ export class GoalDetailsComponent implements OnInit, OnChanges{
 
   selectCategoryToAdd(category: CategoryModel){
     this.isAddingCategoryMode = false;
+    this.enableLoadingState.emit()
     this.goalService.addToCategory(this.goal!.id, category.id).subscribe({
       next: (result) => {
         if(result.isSuccess)
@@ -140,10 +153,11 @@ export class GoalDetailsComponent implements OnInit, OnChanges{
       error: (error) => {
 
       }
-    });
+    }).add(() => this.disableLoadingState.emit());
   }
 
   selectCategoryToRemove(goalCategory: GoalCategory){
+    this.enableLoadingState.emit()
     this.goalService.removeFromCategory(this.goal!.id, goalCategory.categoryId).subscribe({
       next: (result) => {
         if(result.isSuccess)
@@ -154,7 +168,7 @@ export class GoalDetailsComponent implements OnInit, OnChanges{
       error: (error) => {
 
       }
-    });
+    }).add(() => this.disableLoadingState.emit());
   }
 
   closeDetails(){
@@ -181,6 +195,8 @@ export class GoalDetailsComponent implements OnInit, OnChanges{
   }
 
   deleteGoal(id: string){
+    this.enableLoadingState.emit()
+    this.goalNotificationsService.delete(id).subscribe();
     this.goalService.delete(id).subscribe({
       next: (result) =>{
         if(result.isSuccess){
@@ -193,6 +209,6 @@ export class GoalDetailsComponent implements OnInit, OnChanges{
       error: (error) => {
 
       }
-    });
+    }).add(() => this.disableLoadingState.emit());
   }
 }

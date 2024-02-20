@@ -1,10 +1,10 @@
 import { Injectable } from "@angular/core";
-import { ReplaySubject } from "rxjs";
+import { BehaviorSubject, ReplaySubject } from "rxjs";
 import { AuthorizationModel } from "src/app/shared/models/authorization.model";
 
 @Injectable()
 export class AuthorizedAccountService{
-    private accountSource = new ReplaySubject<AuthorizationModel | null>(1);
+    private accountSource = new BehaviorSubject<AuthorizationModel | null>(null);
     
     currentAccount$ = this.accountSource.asObservable();
 

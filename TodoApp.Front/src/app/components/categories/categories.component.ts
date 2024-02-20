@@ -22,6 +22,8 @@ export class CategoriesComponent implements OnInit{
   @Output() errorResponseEvent: EventEmitter<string[]> = new EventEmitter<string[]>();
   @Output() selectedCategoryEvent: EventEmitter<string> = new EventEmitter<string>();
 
+  @Output() deletedCategoryEvent: EventEmitter<CategoryModel> = new EventEmitter<CategoryModel>();
+
   constructor(private categoryService: CategoryService, private localStorageService: LocalStorageService){}
 
   ngOnInit(): void {
@@ -31,7 +33,7 @@ export class CategoriesComponent implements OnInit{
   initializeCategoryForm(){
     this.categoryForm = new FormGroup({
       colorTitle: new FormControl('', Validators.required),
-      colorHex: new FormControl('', Validators.required),
+      colorHex: new FormControl('#000000', Validators.required),
     });
   }
 
@@ -49,18 +51,18 @@ export class CategoriesComponent implements OnInit{
     this.enableLoadingState.emit();
     this.categoryService.delete(id).subscribe({
       next: (result) => {
-        this.disableLoadingState.emit();
         if(result.isSuccess){
           let index = this.categories.findIndex(x=>x.id === id);
           this.categories.splice(index, 1);
+          this.deletedCategoryEvent.emit(result.data);
         }
         else
           this.errorResponseEvent.emit(result.messages);
       },
       error: (error) => {
-
+        console.log(error);
       },
-    });
+    }).add(() => this.disableLoadingState.emit());
   }
 
   createCategory(){
@@ -69,7 +71,6 @@ export class CategoriesComponent implements OnInit{
     this.enableLoadingState.emit();
     this.categoryService.create(category).subscribe({
       next: (result) => {
-        this.disableLoadingState.emit();
         if(result.isSuccess){
           this.categories.push(result.data);
           this.isCreationMode = false;
@@ -78,8 +79,8 @@ export class CategoriesComponent implements OnInit{
           this.errorResponseEvent.emit(result.messages);
       },
       error: (error) => {
-
+        console.log(error);
       },
-    });
+    }).add(() => this.disableLoadingState.emit());
   }
 }

@@ -3,13 +3,14 @@
     <li class="list-group-item">
         <h5>Categories</h5>
 <hr>
-<div class="card mb-2" *ngIf="!isCreationMode">
-  <div class="list-group">
-    <div class="list-group-item d-flex align-items-center" style="width:100%" style="cursor: pointer;" (click)="selectCategory('')">
-      <i class="material-icons md-24">format_color_reset</i> 
-      Search in all categories
-    </div>
+
+<div class="card changable-background-onhover mb-2" *ngIf="!isCreationMode" style="cursor: pointer;" (click)="selectCategory('')">
+  <div class="card-body d-flex align-items-center">
+    <i class="material-icons md-24">format_color_reset</i> Search in all categories
   </div>
+</div>
+<div class="card mb-2" *ngIf="!isCreationMode">
+
     <div class="card-body d-flex p-2 flex-wrap">
         <div class="overflow-y-scroll px-3" style="max-height:15.5svh; width:100%; ">
           <div class="btn-group m-1" *ngFor="let category of categories">
@@ -23,9 +24,9 @@
       </div>
     </div>
   </div>
-  <div class="card mb-2" *ngIf="!isCreationMode" style="cursor: pointer;" (click)="changeIsCreationMode()">
-    <div class="card-body">
-        <i class="bi bi-plus-lg"></i> Create new category
+  <div class="card changable-background-onhover mb-2" *ngIf="!isCreationMode" style="cursor: pointer;" (click)="changeIsCreationMode()">
+    <div class="card-body d-flex align-items-center">
+      <i class="material-icons md-24">add</i> Create new category
     </div>
   </div>
   <div class="card mb-2" *ngIf="isCreationMode">
@@ -35,7 +36,7 @@
               <h5>New category</h5>
             </div>
             <div class="col-lg-6 text-end">
-                <button type="button" class="btn btn-danger px-4"><i class="bi bi-x-lg" (click)="changeIsCreationMode()"></i></button>
+                <button type="button" class="btn btn-danger px-3" (click)="changeIsCreationMode()"><i class="bi bi-x-lg"></i></button>
             </div>
           </div>
           <hr>
@@ -43,7 +44,7 @@
             <span class="input-group-text">Title</span>
             <input class="form-control" type="text" formControlName="colorTitle">
             <input class="form-control-color" type="color" formControlName="colorHex">
-            <button class="btn btn-success px-4"><i class="bi bi-plus-square"></i></button>
+            <button *ngIf="categoryForm.valid" class="btn btn-success px-3"><i class="bi bi-plus-square"></i></button>
           </form>
     </div>
   </div>

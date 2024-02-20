@@ -1,10 +1,12 @@
-import { Component, OnInit } from '@angular/core';
+import { animate, state, style, transition, trigger } from '@angular/animations';
+import { Component, OnChanges, OnInit, SimpleChanges } from '@angular/core';
 import { Router } from '@angular/router';
-import { map } from 'rxjs';
+import { concatMap, map, tap } from 'rxjs';
 import { AccountService } from 'src/app/services/implementations/account.service';
 import { AuthorizedAccountService } from 'src/app/services/implementations/authorized-account.service';
 import { CategoryService } from 'src/app/services/implementations/category.service';
 import { CollectionService } from 'src/app/services/implementations/collection.service';
+import { GoalNotificationsService } from 'src/app/services/implementations/goal-notifications.service';
 import { GoalService } from 'src/app/services/implementations/goal.service';
 import { LocalStorageService } from 'src/app/services/local-storage.service';
 import { SignalRService } from 'src/app/services/signalr.service';
@@ -13,12 +15,45 @@ import { CategoryModel } from 'src/app/shared/models/category.model';
 import { CollectionModel } from 'src/app/shared/models/collection.model';
 import { GoalCategory } from 'src/app/shared/models/goal-category.model';
 import { GoalModel } from 'src/app/shared/models/goal.model';
+import { UserNotificationModel } from 'src/app/shared/models/user-notification.model';
 import { PageParams } from 'src/app/shared/page-params';
+
+const fadeInOutLeft = trigger('fadeInOutLeft', [
+  transition(':enter', [
+      style({ opacity: 1, transform: 'translate(-100%)' }),
+      animate('350ms ease-out', style({ opacity: 1, transform: 'translate(0%)' })),
+  ]),
+  transition(':leave', [
+    animate('350ms ease-in', style({ opacity: 0, transform: 'translate(-100%)' })),
+])
+]);
+
+const fadeInOutRight = trigger('fadeInOutRight', [
+  transition(':enter', [
+    style({ opacity: 1, transform: 'translate(100%)' }),
+      animate('350ms ease-out', style({ opacity: 1, transform: 'translate(0%)' })),
+  ]),
+  transition(':leave', [
+    animate('350ms ease-in', style({ opacity: 0, transform: 'translate(100%)' })),
+])
+]);
+
+const centralfadeInOutRight = trigger('fadeInOutRight', [
+  transition(':enter', [
+    style({ opacity: 1, transform: 'translate(100%)' }),
+      animate('350ms ease-out', style({ opacity: 1, transform: 'translate(0%)' })),
+  ]),
+  transition(':leave', [
+    animate('350ms ease-in', style({ opacity: 0, transform: 'translate(100%)' })),
+])
+]);
+
 
 @Component({
   selector: 'app-dashboard',
   templateUrl: './dashboard.component.html',
-  styleUrls: ['./dashboard.component.css']
+  styleUrls: ['./dashboard.component.css'],
+  animations: [fadeInOutLeft,fadeInOutRight]
 })
 export class DashboardComponent implements OnInit{
   isNavbarShowing: boolean = false;
@@ -29,10 +64,11 @@ export class DashboardComponent implements OnInit{
   categories: CategoryModel[] = [];
 
   selectedCollection!: CollectionModel;
-  selectedGoal!: GoalModel | null;
+  selectedGoal: GoalModel | null = null;
   message!: string | null;
+  goalNotification: UserNotificationModel | null = null;
 
-  pageParams!: PageParams;
+  pageParams: PageParams = new PageParams(1,1,10);;
   responseErrors: string[] | null = null;
   selectedCategoryId: string | null = null;
 
@@ -42,93 +78,128 @@ export class DashboardComponent implements OnInit{
   
   constructor(private localStorage: LocalStorageService, private accountService: AccountService, public aaService: AuthorizedAccountService,
     private goalService: GoalService, private collectionService: CollectionService, private categoryService: CategoryService, private router: Router, 
-    private signalRService: SignalRService){}
-    
+    private signalRService: SignalRService, private goalNotificationsService: GoalNotificationsService){}
+  
   ngOnInit(): void {
-    this.pageParams = new PageParams(1,1,10);
-    this.signalRService.startConnection();
-    this.signalRService.listen();
-    this.signalRService.messageSource.subscribe(x=>this.message = x);
+    this.setupSignalR();
     this.refreshAuthToken();
-    this.refresh();
+    this.refreshPageContent();
+  }
+
+  setupSignalR(){
+    this.signalRService.startConnection();
+    this.signalRService.startListen();
+    this.signalRService.messageSource.subscribe(x=>this.message = x);
+    this.signalRService.goalNotificationSource.subscribe(x=>this.goalNotification = x);
+  }
+
+  setSelectedGoalFromNotification(goalId: string){
+    let goal = this.goals.find(x=>x.id == goalId)!;
+    this.setSelectedGoal(goal);
   }
 
   changeIsLogoutModalActive(){
     this.isLogoutModalActive = !this.isLogoutModalActive;
   }
 
+  onClosedNotification(){
+    this.message = null;
+  }
+
+  onClosedGoalNotification(){
+    this.goalNotification = null;
+  }
+
+  disableLoadingState(){
+    this.isLoadingState = false;
+  }
+
   onChangeMenuOpened(){
     this.isMenuOpened = !this.isMenuOpened;
   }
 
-  onEnableLoadingState(){
+  enableLoadingState(){
     this.isLoadingState = true;
-  }
-
-  onDisableLoadingState(){
-    this.isLoadingState = false;
-  }
-
-  onClosedNotification(){
-    this.message = null;
   }
 
   onClosedError(){
     this.responseErrors = null;
   }
 
+  setSelectedGoal(goal: GoalModel){
+    this.selectedGoal = goal;
+  }
+
   setResponseErrors(errors: string[]){
     this.responseErrors = errors;
   }
 
+  onCreatedCollection(collection: CollectionModel){
+    this.collections.push(collection);
+  }
+
+  onDeletedGoal(){
+    this.removeSelectedGoal(true);
+  }
+
+  changeIsNavbarShowing(){
+    this.isNavbarShowing = !this.isNavbarShowing;
+  }
+
+  logOut(){
+    this.localStorage.removeAccountFromStorage();
+    this.aaService.removeAccount();
+    this.router.navigateByUrl('/Auth');
+  }
+
+  setupGoalsPage(goals: GoalModel[], params: PageParams, errors: string[] = []){
+    this.goals = goals;
+    this.pageParams = params;
+    if(errors.length > 0)
+      this.responseErrors = errors;
+  }
+
+  updateGoalsCategoriesAfterDelete(category: CategoryModel){
+    this.goals.forEach(x=>{
+      let index = x.goalCategories.findIndex(x=>x.categoryId === category.id);
+      if(index != -1)
+        x.goalCategories.splice(index, 1);
+    });
+    let indexInSelected = this.selectedGoal!.goalCategories.findIndex(x=>x.categoryId === category.id);
+    if(indexInSelected != -1)
+      this.selectedGoal!.goalCategories.splice(indexInSelected,1);
+  }
+
   onGoalsPageChanged(pageParams: PageParams){
-    this.isLoadingState =  true;
+    this.enableLoadingState();
     this.pageParams = pageParams;
     if(this.selectedCategoryId){
       let category = this.categories.find(x=>x.id === this.selectedCategoryId);
       this.goalService.getAllFiltered(this.selectedCollection.id, category?.colorTitle, pageParams.itemsPerPage, pageParams.selectedPage).subscribe({
         next: (result) => {
-          this.isLoadingState = false;
-          if(result.isSuccess){
-            this.goals = result.data;
-            this.pageParams = new PageParams(result.itemsCount, result.selectedPage, result.itemsPerPage);
-          }
-          else{
-            this.responseErrors = result.messages;
-            this.goals = [];
-            this.pageParams = new PageParams(1,1,1);
-          }
+          if(result.isSuccess)
+            this.setupGoalsPage(result.data, new PageParams(result.itemsCount, result.selectedPage, result.itemsPerPage));
+          else
+            this.setupGoalsPage([], new PageParams(result.itemsCount, result.selectedPage, result.itemsPerPage), result.messages);
         },
         error: (error) => {
-          this.isLoadingState = false;
           console.log(error);
         },
-      });
+      }).add(() => this.disableLoadingState());
     }
-    else
-    this.isLoadingState =  true;
+    else{
       this.goalService.getAllFiltered(this.selectedCollection.id, '', pageParams.itemsPerPage, pageParams.selectedPage).subscribe({
         next: (result) => {
-          this.isLoadingState = false;
-          if(result.isSuccess){
-            this.goals = result.data;
-            this.pageParams = new PageParams(result.itemsCount, result.selectedPage, result.itemsPerPage);
-          }
-          else{
-            this.responseErrors = result.messages;
-            this.goals = [];
-            this.pageParams = new PageParams(1,1,1);
-          }
+          if(result.isSuccess)
+            this.setupGoalsPage(result.data, new PageParams(result.itemsCount, result.selectedPage, result.itemsPerPage));
+          else
+            this.setupGoalsPage([], new PageParams(result.itemsCount, result.selectedPage, result.itemsPerPage), result.messages);
         },
         error: (error) => {
-          this.isLoadingState = false;
           console.log(error);
         },
-      });
-  }
-
-  setSelectedGoal(goal: GoalModel){
-    this.selectedGoal = goal;
+      }).add(() => this.disableLoadingState());
+    }
   }
 
   onUpdatedGoal(goal: GoalModel){
@@ -141,117 +212,99 @@ export class DashboardComponent implements OnInit{
 
   onSearchGoalsByQuery(query: string){
     this.selectedGoal = null;
-    this.isLoadingState =  true;
+    this.enableLoadingState();
       if(query.length > 0){
       this.goalService.getAllFiltered('', query, this.pageParams.itemsPerPage, this.pageParams.selectedPage).subscribe({
         next: (result) => {
-          this.isLoadingState = false;
-          if(result.isSuccess){
-            this.goals = result.data;
-            this.pageParams = new PageParams(result.itemsCount, result.selectedPage, result.itemsPerPage);
-          }
-          else{
-            this.responseErrors = result.messages;
-            this.goals = [];
-            this.pageParams = new PageParams(1,1,1);
-          }
+          if(result.isSuccess)
+            this.setupGoalsPage(result.data, new PageParams(result.itemsCount, result.selectedPage, result.itemsPerPage));
+          else
+            this.setupGoalsPage([], new PageParams(result.itemsCount, result.selectedPage, result.itemsPerPage), result.messages);
         },
         error: (error) => {
-          this.isLoadingState = false;
           console.log(error);
         },
-      });
+      }).add(() => this.disableLoadingState());
     }
     else{
       this.goalService.getAllFiltered(this.selectedCollection.id, '', this.pageParams.itemsPerPage, this.pageParams.selectedPage).subscribe({
         next: (result) => {
-          this.isLoadingState = false;
-          if(result.isSuccess){
-            this.goals = result.data;
-            this.pageParams = new PageParams(result.itemsCount, result.selectedPage, result.itemsPerPage);
-          }
-          else{
-            this.responseErrors = result.messages;
-            this.goals = [];
-            this.pageParams = new PageParams(1,1,1);
-          }
+          if(result.isSuccess)
+            this.setupGoalsPage(result.data, new PageParams(result.itemsCount, result.selectedPage, result.itemsPerPage));
+          else
+            this.setupGoalsPage([], new PageParams(result.itemsCount, result.selectedPage, result.itemsPerPage), result.messages);
         },
         error: (error) => {
-          this.isLoadingState = false;
           console.log(error);
         },
-      });
+      }).add(() => this.disableLoadingState());
     }
   }
 
   onChangedSelectedCategory(categoryId: string){
-    this.isLoadingState =  true;
     this.selectedCategoryId = categoryId;
+    this.enableLoadingState();
+
+    if(!this.selectedCollection){
+      this.disableLoadingState();
+      return;
+    }
+      
     if(categoryId){
       let category = this.categories.find(x=>x.id === categoryId);
       this.goalService.getAllFiltered(this.selectedCollection!.id, category!.colorTitle, this.pageParams.itemsPerPage, this.pageParams.selectedPage).subscribe({
         next: (result) => {
-          this.isLoadingState = false;
-          if(result.isSuccess){
-            this.goals = result.data;
-            this.pageParams = new PageParams(result.itemsCount, result.selectedPage, result.itemsPerPage);
-            this.selectedCategoryId = categoryId;
-          }
-          else{
-            this.responseErrors = result.messages;
-            this.goals = [];
-            this.pageParams = new PageParams(1,1,1);
-            this.selectedCategoryId = null;
-          }
+          if(result.isSuccess)
+            this.setupGoalsPage(result.data, new PageParams(result.itemsCount, result.selectedPage, result.itemsPerPage));
+          else
+            this.setupGoalsPage([], new PageParams(result.itemsCount, result.selectedPage, result.itemsPerPage), result.messages);
         },
         error: (error) => {
-          this.isLoadingState = false;
           console.log(error);
         },
-      });
+      }).add(() => this.disableLoadingState());
     }
     else{
       this.goalService.getAllFiltered(this.selectedCollection!.id, '', this.pageParams.itemsPerPage, this.pageParams.selectedPage).subscribe({
         next: (result) => {
-          this.isLoadingState = false;
+          this.selectedCategoryId = null;
           if(result.isSuccess){
-            this.goals = result.data;
-            this.pageParams = new PageParams(result.itemsCount, result.selectedPage, result.itemsPerPage);
-            this.selectedCategoryId = null;
+            this.setupGoalsPage(result.data, new PageParams(result.itemsCount, result.selectedPage, result.itemsPerPage));
           }
           else{
-            this.responseErrors = result.messages;
-            this.goals = [];
-            this.pageParams = new PageParams(1,1,1);
-            this.selectedCategoryId = null;
+            this.setupGoalsPage([], new PageParams(result.itemsCount, result.selectedPage, result.itemsPerPage), result.messages);
           }
         },
         error: (error) => {
-          this.isLoadingState = false;
           console.log(error);
         },
-      });
+      }).add(() => this.disableLoadingState());
     }
   }
 
-  removeSelectedGoal(){
+  removeSelectedGoal(removeGoalInList: boolean = false){
+    if(removeGoalInList){
+      var index = this.goals.findIndex(x=>x.id === this.selectedGoal?.id);
+      if(index != -1)
+        this.goals.splice(index,1);
+    }
     this.selectedGoal = null;
   }
 
   setDefaultCollectionAfterDelete(collection: CollectionModel){
     if(this.selectedCollection!.id === collection.id){
-      this.selectedCollection = this.collections.find(x=>x.title === "Unsorted") as CollectionModel;
+      let unsorted = this.collections.find(x=>x.title === "Unsorted") as CollectionModel;
+      this.selectedCollection = unsorted;
       this.getAllGoalsInCollection(this.selectedCollection);
     }
   }
 
-  refresh(){
+  refreshPageContent(){
     this.account = this.localStorage.getAccountFromStorage();
     this.refreshAuthToken();
     if(this.account){
-      this.getCollections();
       this.getCategories();
-      this.getAllGoalsInCollection(this.selectedCollection!);
+      this.getCollectionsAndGoals();
     }
   }
 
@@ -269,67 +322,56 @@ export class DashboardComponent implements OnInit{
 
   getAllGoalsInCollection(collection: CollectionModel){
     this.selectedCollection = collection;
-    this.isLoadingState =  true;
-    this.goalService.getAllFiltered(collection.id, '', this.pageParams.itemsPerPage).subscribe({
+    this.enableLoadingState();
+    this.goalService.getAllFiltered(collection.id, '', this.pageParams.itemsPerPage, this.pageParams.selectedPage).subscribe({
       next: (result) => {
-        this.isLoadingState = false;
         if(result.isSuccess){
-          this.goals = result.data;
-          this.pageParams = new PageParams(result.itemsCount, result.selectedPage, result.itemsPerPage);
+          this.setupGoalsPage(result.data, new PageParams(result.itemsCount, result.selectedPage, result.itemsPerPage));
         }
         else{
-          this.responseErrors = result.messages;
-          this.goals = [];
-          this.pageParams = new PageParams(1,1,1);
+          this.setupGoalsPage([], new PageParams(result.itemsCount, result.selectedPage, result.itemsPerPage), result.messages);
         }
       },
       error: (error) => {
-        this.isLoadingState = false;
         console.log(error);
       },
-    });
+    }).add(() => { this.disableLoadingState(); this.goalNotificationsService.create(this.goals).subscribe();});
   }
 
-  getCollections(){
-    this.isLoadingState =  true;
+  getCollectionsAndGoals(){
+    this.enableLoadingState();
     this.collectionService.getAllFiltered(this.account.accountId).pipe(map(x=>{
       this.selectedCollection = x.data.find(x=>x.title === 'Unsorted') as CollectionModel;
       return x;
-    })).subscribe({
+    }))
+    .subscribe({
       next: (result) =>{
-        this.isLoadingState = false;
-        if(result.isSuccess)
+        if(result.isSuccess) {
           this.collections = result.data;
-        else 
+          this.getAllGoalsInCollection(this.selectedCollection);
+        }
+        else{
           this.responseErrors = result.messages;
+        }
       },
       error: (error) => {
-        this.isLoadingState = false;
         console.log(error);
-      }
-    })
-    .add(() => this.getAllGoalsInCollection(this.selectedCollection));
+      },
+    }).add(() => this.disableLoadingState());
   }
 
   getCategories(){
-    this.isLoadingState =  true;
+    this.isLoadingState = true;
     this.categoryService.getAllFiltered(this.account.accountId).subscribe({
       next: (result) => {
-        this.isLoadingState = false;
-        if(result.isSuccess)
+        if(result.isSuccess){
           this.categories = result.data;
+        }
       },
       error: (error) => {
-        this.isLoadingState = false;
         console.log(error);
       }
-    })
-  }
-
-  logOut(){
-    this.localStorage.removeAccountFromStorage();
-    this.aaService.removeAccount();
-    this.router.navigateByUrl('/Auth');
+    }).add(() => this.disableLoadingState());
   }
 
   refreshAuthToken(){
@@ -365,9 +407,5 @@ export class DashboardComponent implements OnInit{
     if(date > expirationDate) 
         return false;
     return true
-  }
-
-  changeIsNavbarShowing(){
-    this.isNavbarShowing = !this.isNavbarShowing;
   }
 }

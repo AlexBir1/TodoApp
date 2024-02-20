@@ -26,6 +26,9 @@ import { ErrorComponent } from './components/error/error.component';
 import { LoaderComponent } from './components/loader/loader.component';
 import { MenuPopupComponent } from './components/menu-popup/menu-popup.component';
 import { LogoutPopupComponent } from './components/logout-popup/logout-popup.component';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { GoalNotificationComponent } from './components/goal-notification/goal-notification.component';
+import { GoalNotificationsService } from './services/implementations/goal-notifications.service';
 
 const routes: Route[] = [
   { path: 'Dashboard', component: DashboardComponent },
@@ -47,6 +50,7 @@ const routes: Route[] = [
     LoaderComponent,
     MenuPopupComponent,
     LogoutPopupComponent,
+    GoalNotificationComponent,
   ],
   imports: [
     BrowserModule,
@@ -54,9 +58,10 @@ const routes: Route[] = [
     ReactiveFormsModule,
     FormsModule,
     NgxPaginationModule,
-    RouterModule.forRoot(routes)
+    RouterModule.forRoot(routes),
+    BrowserAnimationsModule
   ],
-  providers: [LocalStorageService, AuthorizedAccountService, AccountService, AttachmentService, CategoryService, CollectionService, GoalService, {provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true}],
+  providers: [LocalStorageService, AuthorizedAccountService, AccountService, AttachmentService, CategoryService, CollectionService, GoalNotificationsService, GoalService, {provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true}],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

@@ -7,20 +7,40 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
 })
 export class ErrorComponent {
   @Input() errors: string[] | null = []; 
-  lifeTimeSecs: number = 4;
   @Output() closedEvent: EventEmitter<any> = new EventEmitter<any>();
 
+  lifeTimeSecs: number = 4;
+  timeoutSecs!: any;
+  intervalSecs!: any;
+  isMouseIn: boolean = false;
+
   constructor(){
+    this.startCountdown();
+  }
+
+  onMouseEnter(){
+    this.lifeTimeSecs = 0;
+    this.isMouseIn = true;
+    clearInterval(this.intervalSecs);
+    clearTimeout(this.timeoutSecs);
+  }
+
+  startCountdown(){
     this.lifeTimeSecs = 4;
-    setInterval(() => 
+    this.isMouseIn = false;
+    this.intervalSecs = setInterval(() => 
     {
       if(this.lifeTimeSecs > 0)
-        this.lifeTimeSecs = this.lifeTimeSecs - 1;
+        this.lifeTimeSecs -= 1;
     }, 1000);
-    setTimeout(()=>
+    this.timeoutSecs = setTimeout(()=>
     {
       this.close()
-    }, 4000);
+    }, this.lifeTimeSecs * 1000);
+  }
+
+  onMouseLeave(){
+    this.startCountdown();
   }
 
   close(){

@@ -1,12 +1,14 @@
 import { Injectable } from "@angular/core";
 import * as signalR from '@microsoft/signalR';
 import { ReplaySubject } from "rxjs";
+import { UserNotificationModel } from "../shared/models/user-notification.model";
 import { LocalStorageService } from "./local-storage.service";
 
 @Injectable({providedIn: 'root'})
 export class SignalRService{
     hubConnection!: signalR.HubConnection;
-    messageSource = new ReplaySubject<string | null>(1);
+    messageSource = new ReplaySubject<any | null>(1);
+    goalNotificationSource = new ReplaySubject<UserNotificationModel | null>(1);
 
     constructor(private localStorageService: LocalStorageService){
 
@@ -32,7 +34,15 @@ export class SignalRService{
         });
     }
 
-    listen(){
-        this.hubConnection.on('Notify', (msg) => this.messageSource.next(msg));
+    startListen(){
+        this.hubConnection.on('Notify', (msg) => 
+        {
+            let goalNotification = msg as UserNotificationModel;
+            if(goalNotification.goalId ){
+                this.goalNotificationSource.next(msg);
+            }
+            else
+                this.messageSource.next(msg)
+        });
     }
 }
