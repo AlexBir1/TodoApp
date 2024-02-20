@@ -32,7 +32,7 @@ namespace TodoAPI.DAL.Repositories.Implementations
             var attachment = await _context.Attachments.SingleOrDefaultAsync(x=>x.Id == Guid.Parse(id));
 
             if (attachment == null)
-                throw new Exception("No such attachment is found.");
+                throw new ArgumentException("No such attachment is found.");
 
             _context.Attachments.Remove(attachment);
             await _context.SaveChangesAsync();
@@ -42,12 +42,7 @@ namespace TodoAPI.DAL.Repositories.Implementations
 
         public async Task<IEnumerable<Attachment>> GetAllAsync()
         {
-            var attachments = await _context.Attachments.ToListAsync();
-
-            if (attachments.Count == 0)
-                throw new Exception("No attachments for now.");
-
-            return attachments;
+            return await _context.Attachments.ToListAsync();
         }
 
         public async Task<IEnumerable<Attachment>> GetAllAsync(Expression<Func<Attachment, bool>> expression = null)
@@ -59,18 +54,12 @@ namespace TodoAPI.DAL.Repositories.Implementations
             else
                 attachments = await _context.Attachments.AsNoTracking().ToListAsync();
 
-            if (attachments.Count == 0)
-                throw new Exception("No attachments for now.");
-
-            int dbItemsCount = await _context.Goals.CountAsync();
-
             return attachments;
         }
 
         public async Task<Attachment> GetByIdAsync(string id)
         {
             var attachment = await _context.Attachments.SingleOrDefaultAsync(x => x.Id == Guid.Parse(id));
-            await _context.SaveChangesAsync();
 
             if (attachment == null)
                 throw new Exception("No such attachment is found.");
@@ -80,8 +69,10 @@ namespace TodoAPI.DAL.Repositories.Implementations
 
         public async Task<Attachment> UpdateAsync(string id, Attachment entity)
         {
-            if (await _context.Attachments.SingleOrDefaultAsync(x => x.Id == Guid.Parse(id)) == null)
-                throw new Exception("No such attachment is found.");
+            var attachment = await _context.Attachments.SingleOrDefaultAsync(x => x.Id == Guid.Parse(id));
+
+            if (attachment == null)
+                throw new ArgumentException("No such attachment is found.");
 
             entity.Id = Guid.Parse(id);
 

@@ -55,8 +55,6 @@ namespace TodoAPI.Controllers
         public async Task<ActionResult<IAPIResponse<Collection>>> CreateAsync([FromBody] CollectionModel model) 
         {
             var result = await _mediator.Send(new CreateCollectionCommand(model));
-            if (result.IsSuccess)
-                await _notifier.Clients.User(HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier)).SendAsync("Notify", "Collection is successfully created");
             return Ok(result);
         }
     }

@@ -16,6 +16,7 @@ namespace TodoAPI.DAL.DBContext
         public DbSet<Goal> Goals { get; set; }
         public DbSet<Attachment> Attachments { get; set; }
         public DbSet<CategoryGoal> CategoriesGoals { get; set; }
+        public DbSet<GoalNotificator> GoalNotificators { get; set; }
 
         public AppDBContext(DbContextOptions<AppDBContext> options, bool isTest = false) : base(options)
         {
@@ -68,8 +69,14 @@ namespace TodoAPI.DAL.DBContext
             builder.Entity<CategoryGoal>(e =>
             {
                 e.HasKey(x => new { x.GoalId, x.CategoryId });
-                e.HasOne(x => x.Goal).WithMany(x => x.GoalCategories).HasForeignKey(x => x.GoalId).OnDelete(deleteBehavior: DeleteBehavior.Restrict);
+                e.HasOne(x => x.Goal).WithMany(x => x.GoalCategories).HasForeignKey(x => x.GoalId);
                 e.HasOne(x => x.Category).WithMany(x => x.CategoryGoals).HasForeignKey(x => x.CategoryId).OnDelete(deleteBehavior: DeleteBehavior.Cascade);
+            });
+
+            builder.Entity<GoalNotificator>(e =>
+            {
+                e.HasKey(x => x.GoalId);
+                e.HasOne(x => x.Goal).WithOne(x => x.Notificator).HasForeignKey<GoalNotificator>(x => x.GoalId).OnDelete(deleteBehavior: DeleteBehavior.Cascade);
             });
 
             base.OnModelCreating(builder);

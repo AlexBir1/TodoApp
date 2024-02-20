@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
+using Quartz;
 using Serilog;
 using System.Reflection;
 using System.Text;
@@ -15,6 +16,7 @@ using TodoAPI.DAL.Repositories.Implementations;
 using TodoAPI.DAL.Repositories.Interfaces;
 using TodoAPI.Hubs;
 using TodoAPI.Middlewares.AppBuilderExtensions;
+using TodoAPI.Notifications.Service;
 using TodoAPI.Services.Implementations;
 using TodoAPI.Services.Interfaces;
 
@@ -50,12 +52,18 @@ namespace TodoAPI
             builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
             builder.Services.AddScoped<ICollectionRepository, CollectionRepository>();
             builder.Services.AddScoped<IGoalRepository, GoalRepository>();
+            builder.Services.AddScoped<IGoalNotificatorRepository, GoalNotificatorRepository>();
 
             builder.Services.AddScoped<IAccountService, AccountService>();
             builder.Services.AddScoped<IAttachmentService, AttachmentService>();
             builder.Services.AddScoped<ICategoryService, CategoryService>();
             builder.Services.AddScoped<ICollectionService, CollectionService>();
             builder.Services.AddScoped<IGoalService, GoalService>();
+            builder.Services.AddScoped<IGoalNotificatorService, GoalNotificatorService>();
+            builder.Services.AddScoped<GoalScheduler>();
+
+            builder.Services.AddHangfire(x => x.UseSqlServerStorage(builder.Configuration.GetConnectionString("StrConnection")!));
+            builder.Services.AddHangfireServer();
 
             builder.Services.AddIdentityCore<Account>(options =>
             {
@@ -132,6 +140,8 @@ namespace TodoAPI
             app.UseCors(t => t.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
 
             app.UseRouting();
+
+            app.UseHangfireDashboard();
 
             app.UseAuthentication();
             app.UseAuthorization();

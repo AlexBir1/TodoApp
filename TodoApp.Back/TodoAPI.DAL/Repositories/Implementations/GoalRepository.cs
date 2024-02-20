@@ -30,11 +30,12 @@ namespace TodoAPI.DAL.Repositories.Implementations
 
         public async Task<Goal> CreateAsync(Goal entity)
         {
-            entity.CreationDate = DateTime.Now;
-            entity.UpdateDate = DateTime.Now;
-
             var result = await _context.Goals.AddAsync(entity);
             await _context.SaveChangesAsync();
+
+            _context.Entry(result.Entity).Reference(x => x.Collection).Load();
+
+            result.Entity.OptimizeDepth();
 
             return result.Entity;
         }
@@ -44,13 +45,7 @@ namespace TodoAPI.DAL.Repositories.Implementations
             var goal = await _context.Goals.Include(x => x.GoalCategories).AsNoTracking().SingleOrDefaultAsync(x => x.Id == Guid.Parse(id));
 
             if (goal == null)
-                throw new Exception("No such goal is found.");
-
-            if (goal.GoalCategories != null && goal.GoalCategories.Any())
-            {
-                _context.CategoriesGoals.RemoveRange(goal.GoalCategories);
-                await _context.SaveChangesAsync();
-            }
+                throw new ArgumentException("No such goal is found.");
 
             _context.Goals.Remove(goal);
             await _context.SaveChangesAsync();
@@ -61,31 +56,24 @@ namespace TodoAPI.DAL.Repositories.Implementations
         public async Task<PagedResult<Goal>> GetAllPagedAsync(Expression<Func<Goal, bool>> expression = null, int itemsPerPage = 1, int selectedPage = 1)
         {
             List<Goal> goals;
-
+            int dbItemsCount = 0;
             int countToSkip = selectedPage > 1 ? (selectedPage - 1) * itemsPerPage : 0;
 
             if (expression != null)
-                goals = await _context.Goals.Where(expression).Include(x => x.Attachments).Include(x => x.GoalCategories).ThenInclude(x => x.Category).Skip(countToSkip).Take(itemsPerPage).AsNoTracking().ToListAsync();
+            {
+                goals = await _context.Goals.Where(expression).Include(x=>x.Collection).Include(x => x.Attachments).Include(x => x.GoalCategories).ThenInclude(x => x.Category).Skip(countToSkip).Take(itemsPerPage).AsNoTracking().ToListAsync();
+                dbItemsCount = await _context.Goals.Where(expression).CountAsync();
+            }
             else
-                goals = await _context.Goals.Include(x => x.Attachments).Include(x => x.GoalCategories).ThenInclude(x => x.Category).Skip(selectedPage > 1 ? (selectedPage - 1) * itemsPerPage : 0).Take(itemsPerPage).AsNoTracking().ToListAsync();
-
-            if (goals.Count == 0)
-                throw new Exception("No goals for now.");
+            {
+                goals = await _context.Goals.Include(x => x.Collection).Include(x => x.Attachments).Include(x => x.GoalCategories).ThenInclude(x => x.Category).Skip(countToSkip).Take(itemsPerPage).AsNoTracking().ToListAsync();
+                dbItemsCount = await _context.Goals.CountAsync();
+            }
 
             foreach (var goal in goals)
             {
-                foreach (var a in goal.Attachments)
-                {
-                    a.Goal = null;
-                }
-                foreach (var gc in goal.GoalCategories)
-                {
-                    gc.Goal = null;
-                    gc.Category.CategoryGoals = null;
-                }
+                goal.OptimizeDepth();
             }
-
-            int dbItemsCount = await _context.Goals.Where(expression).CountAsync();
 
             return new PagedResult<Goal>(goals, dbItemsCount, selectedPage, itemsPerPage);
         }
@@ -99,16 +87,9 @@ namespace TodoAPI.DAL.Repositories.Implementations
             else
                 goals = await _context.Goals.Include(x => x.GoalCategories).ThenInclude(x => x.Category).AsNoTracking().ToListAsync();
 
-            if (goals.Count == 0)
-                throw new Exception("No goals for now.");
-
             foreach (var goal in goals)
             {
-                foreach (var gc in goal.GoalCategories)
-                {
-                    gc.Goal = null;
-                    gc.Category.CategoryGoals = null;
-                }
+                goal.OptimizeDepth();
             }
 
             return goals;
@@ -116,11 +97,10 @@ namespace TodoAPI.DAL.Repositories.Implementations
 
         public async Task<Goal> GetByIdAsync(string id)
         {
-            var goal = await _context.Goals.Include(x => x.Attachments).Include(x => x.GoalCategories).ThenInclude(x => x.Category).AsNoTracking().SingleOrDefaultAsync(x => x.Id == Guid.Parse(id));
+            var goal = await _context.Goals.Include(x => x.Collection).Include(x => x.Attachments).Include(x => x.GoalCategories).ThenInclude(x => x.Category).AsNoTracking().SingleOrDefaultAsync(x => x.Id == Guid.Parse(id));
 
             if (goal == null)
                 throw new Exception("No such goal is found.");
-
 
             foreach(var a in goal.Attachments)
             {
@@ -131,6 +111,8 @@ namespace TodoAPI.DAL.Repositories.Implementations
                 gc.Goal = null;
                 gc.Category.CategoryGoals = null;
             }
+
+            goal.OptimizeDepth();
 
             return goal;
         }
@@ -143,18 +125,23 @@ namespace TodoAPI.DAL.Repositories.Implementations
 
         public async Task<Goal> UpdateAsync(string id, Goal entity)
         {
-            if (await _context.Goals.AsNoTracking().SingleOrDefaultAsync(x => x.Id == Guid.Parse(id)) == null)
+            var goal = await _context.Goals.AsNoTracking().SingleOrDefaultAsync(x => x.Id == Guid.Parse(id));
+
+            if (goal == null)
                 throw new Exception("No such goal is found.");
 
             entity.Id = Guid.Parse(id);
-
             entity.UpdateDate = DateTime.Now;
 
-            _context.Goals.Attach(entity);
-            _context.Entry(entity).State = EntityState.Modified;
+            _context.Goals.Update(entity);
             await _context.SaveChangesAsync();
+
+            _context.Entry(entity).Reference(x => x.Collection).Load();
+            entity.OptimizeDepth();
 
             return entity;
         }
+
+        
     }
 }

@@ -28,11 +28,7 @@ namespace TodoAPI.DAL.Repositories.Implementations
             var collection = await _context.Collections.AsNoTracking().SingleOrDefaultAsync(x => x.Id == Guid.Parse(id));
 
             if (collection == null)
-            {
-                var qa = await _context.Collections.ToListAsync();
                 throw new Exception("No such collection is found.");
-            }
-                
 
             _context.Collections.Remove(collection);
             await _context.SaveChangesAsync();

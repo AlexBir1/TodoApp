@@ -24,8 +24,7 @@ namespace TodoAPI.XUnit.Repositories
             var context = FakeDBContext.MakeTestInstance();
             var testCollections = CollectionFaker.Generate();
 
-            var repo = new CollectionRepository(context);
-            var result = await repo.CreateAsync(testCollections);
+            var result = await new CollectionRepository(context).CreateAsync(testCollections);
 
             Assert.NotNull(result);
 
@@ -43,10 +42,7 @@ namespace TodoAPI.XUnit.Repositories
             await context.SaveChangesAsync();
             context.ChangeTracker.Clear();
 
-            var repo = new CollectionRepository(context);
-            var result = await repo.CreateAsync(testCollections);
-
-            await Assert.ThrowsAnyAsync<ArgumentException>(async () => await context.SaveChangesAsync());
+            await Assert.ThrowsAnyAsync<ArgumentException>(async () => await new CollectionRepository(context).CreateAsync(testCollections));
 
             await context.Database.EnsureDeletedAsync();
             await context.DisposeAsync();
@@ -62,8 +58,7 @@ namespace TodoAPI.XUnit.Repositories
             await context.SaveChangesAsync();
             context.ChangeTracker.Clear();
 
-            var repo = new CollectionRepository(context);
-            var result = await repo.DeleteAsync(testCollections.Id.ToString());
+            var result = await new CollectionRepository(context).DeleteAsync(testCollections.Id.ToString());
 
             Assert.NotNull(result);
 
@@ -93,8 +88,7 @@ namespace TodoAPI.XUnit.Repositories
             await context.SaveChangesAsync();
             context.ChangeTracker.Clear();
 
-            var repo = new CollectionRepository(context);
-            var сollection = await repo.UpdateAsync(testCollections[1].Id.ToString(), testCollections[1]);
+            var сollection = await new CollectionRepository(context).UpdateAsync(testCollections[1].Id.ToString(), testCollections[1]);
 
             Assert.NotNull(сollection);
             Assert.Equal(testCollections[1].Title, сollection.Title);
@@ -120,13 +114,11 @@ namespace TodoAPI.XUnit.Repositories
             var context = FakeDBContext.MakeTestInstance();
             var testGoals = CollectionFaker.Generate();
             
-
             await context.Collections.AddAsync(testGoals);
             await context.SaveChangesAsync();
             context.ChangeTracker.Clear();
 
-            var repo = new CollectionRepository(context);
-            var goals = await repo.GetAllAsync();
+            var goals = await new CollectionRepository(context).GetAllAsync();
 
             Assert.NotNull(goals);
             Assert.NotEmpty(goals);
@@ -156,8 +148,7 @@ namespace TodoAPI.XUnit.Repositories
             await context.SaveChangesAsync();
             context.ChangeTracker.Clear();
 
-            var repo = new CollectionRepository(context);
-            var goals = await repo.GetAllAsync(x => x.Title == testGoals[0].Title);
+            var goals = await new CollectionRepository(context).GetAllAsync(x => x.Title == testGoals[0].Title);
 
             Assert.NotNull(goals);
             Assert.NotEmpty(goals);
@@ -182,13 +173,12 @@ namespace TodoAPI.XUnit.Repositories
         {
             var context = FakeDBContext.MakeTestInstance();
             var testGoals = CollectionFaker.Generate();
-            var repo = new CollectionRepository(context);
 
             await context.Collections.AddAsync(testGoals);
             await context.SaveChangesAsync();
             context.ChangeTracker.Clear();
 
-            var goals = await repo.GetByIdAsync(testGoals.Id.ToString());
+            var goals = await new CollectionRepository(context).GetByIdAsync(testGoals.Id.ToString());
 
             Assert.NotNull(goals);
 

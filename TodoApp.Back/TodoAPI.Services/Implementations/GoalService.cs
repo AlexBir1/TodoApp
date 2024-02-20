@@ -40,16 +40,8 @@ namespace TodoAPI.Services.Implementations
 
         public async Task<IAPIResponse<IEnumerable<Goal>>> GetAllPagedAsync(Expression<Func<Goal, bool>> expression = null, int itemsPerPage = 1, int selectedPage = 1)
         {
-            if (expression != null)
-            {
-                var result = await _goalRepo.GetAllPagedAsync(expression, itemsPerPage, selectedPage);
-                return new APIResponse<IEnumerable<Goal>>(true, result.Items, result.ItemsCount, result.SelectedPage, result.ItemsPerPage);
-            }
-            else
-            {
-                var result = await _goalRepo.GetAllPagedAsync(itemsPerPage: itemsPerPage, selectedPage: selectedPage);
-                return new APIResponse<IEnumerable<Goal>>(true, result.Items, result.ItemsCount, result.SelectedPage, result.ItemsPerPage);
-            }
+            var result = await _goalRepo.GetAllPagedAsync(expression, itemsPerPage, selectedPage);
+            return new APIResponse<IEnumerable<Goal>>(true, result.Items, result.ItemsCount, result.SelectedPage, result.ItemsPerPage);
         }
 
         public Task<IAPIResponse<IEnumerable<Goal>>> GetAllAsync(Expression<Func<Goal, bool>> expression = null)

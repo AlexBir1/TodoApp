@@ -32,7 +32,7 @@ namespace TodoAPI.DAL.Repositories.Implementations
             var category = await _context.Categories.AsNoTracking().SingleOrDefaultAsync(x => x.Id == Guid.Parse(id));
 
             if(category == null)
-                throw new Exception("No such category is found.");
+                throw new ArgumentException("No such category is found.");
 
             _context.Categories.Remove(category);
             await _context.SaveChangesAsync();
@@ -59,11 +59,6 @@ namespace TodoAPI.DAL.Repositories.Implementations
             else
                 categories = await _context.Categories.AsNoTracking().ToListAsync();
 
-            if (categories.Count == 0)
-                throw new Exception("No categories for now.");
-
-            int dbItemsCount = await _context.Goals.CountAsync();
-
             return categories;
         }
 
@@ -72,7 +67,7 @@ namespace TodoAPI.DAL.Repositories.Implementations
             var category = await _context.Categories.AsNoTracking().SingleOrDefaultAsync(x => x.Id == Guid.Parse(id));
 
             if (category == null)
-                throw new Exception("No such category is found.");
+                throw new ArgumentException("No such category is found.");
 
             return category;
         }
@@ -80,7 +75,7 @@ namespace TodoAPI.DAL.Repositories.Implementations
         public async Task<Category> UpdateAsync(string id, Category entity)
         {
             if(await _context.Categories.AsNoTracking().SingleOrDefaultAsync(x => x.Id == Guid.Parse(id)) == null)
-                throw new Exception("No such category is found.");
+                throw new ArgumentException("No such category is found.");
 
             entity.Id = Guid.Parse(id);
 

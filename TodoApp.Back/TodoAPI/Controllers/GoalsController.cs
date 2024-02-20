@@ -1,10 +1,12 @@
 ﻿using Hangfire;
+using Hangfire.Storage;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using System.Security.Claims;
+using TodoAPI.APIResponse.Implementations;
 using TodoAPI.APIResponse.Interfaces;
 using TodoAPI.CQRS.Commands;
 using TodoAPI.CQRS.Commands.Goals;
@@ -13,6 +15,8 @@ using TodoAPI.CQRS.Queries.Goals;
 using TodoAPI.DAL.Entities;
 using TodoAPI.Filters;
 using TodoAPI.Hubs;
+using TodoAPI.Notifications;
+using TodoAPI.Notifications.Service;
 using TodoAPI.Services.Interfaces;
 using TodoAPI.Shared.Models;
 
@@ -70,6 +74,8 @@ namespace TodoAPI.Controllers
         [HttpGet]
         public async Task<ActionResult<IAPIResponse<IEnumerable<Goal>>>> GetAllAsync
             ([FromQuery] string collectionId = "", [FromQuery] string searchQuery = "", [FromQuery] int itemsPerPage = 1, [FromQuery] int selectedPage = 1)
-                => Ok(await _mediator.Send(new GetGoalListByCollectionIdPagedQuery(collectionId, searchQuery, selectedPage, itemsPerPage)));
+        {
+            return Ok(await _mediator.Send(new GetGoalListByCollectionIdPagedQuery(collectionId, searchQuery, selectedPage, itemsPerPage)));
+        }
     }
 }

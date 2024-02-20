@@ -13,7 +13,6 @@ namespace TodoAPI.Services.Token
     {
         public static TokenModel CreateToken(Account model, TokenDescriptorModel descriptor)
         {
-
             var userClaims = new List<Claim>()
             {
                 new Claim(ClaimTypes.NameIdentifier, model.Id),
@@ -22,9 +21,7 @@ namespace TodoAPI.Services.Token
             };
 
             var tokenKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(descriptor.Key));
-
             var credetials = new SigningCredentials(tokenKey, SecurityAlgorithms.HmacSha512Signature);
-
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(userClaims),

@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using TodoAPI.DAL.Entities;
+using TodoAPI.Notifications;
 using TodoAPI.Shared.Models;
 
 namespace TodoAPI.Mappers
@@ -22,6 +23,9 @@ namespace TodoAPI.Mappers
             CreateMap<CategoryModel, Category>()
                 .ForMember(x => x.ColorTitle, x => x.MapFrom(c => c.ColorTitle))
                 .ForMember(x => x.ColorHex, x => x.MapFrom(c => c.ColorHex));
+
+            CreateMap<GoalNotificatorModel, GoalNotificator>();
+            CreateMap<GoalNotificator, GoalNotificatorModel>();
         }
     }
 }
